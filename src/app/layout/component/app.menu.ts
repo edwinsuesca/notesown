@@ -20,19 +20,7 @@ export class AppMenu {
 
   ngOnInit() {
     this.model = [
-      {
-        label: 'Mis notas',
-        items: [
-          { 
-            label: 'Editor', 
-            icon: 'pi pi-fw pi-file-edit', 
-            routerLink: ['/editor'] 
-          }
-        ]
-      },
-      {
-        separator: true
-      },
+      { separator: true },
       {
         items: [
           { 

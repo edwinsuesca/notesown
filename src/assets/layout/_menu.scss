@@ -5,7 +5,7 @@
     width: 20rem;
     height: calc(100vh - 6rem);
     z-index: 999;
-    overflow-y: auto;
+    overflow-y: hidden;
     user-select: none;
     top: 5rem;
     left: 1rem;
@@ -15,6 +15,8 @@
     background-color: var(--surface-overlay);
     border-radius: var(--content-border-radius);
     padding: 0.5rem 1.5rem;
+    display: flex;
+    flex-direction: column;
 }
 
 .layout-menu {
