@@ -1,0 +1,18 @@
+<div class="card relative group">
+  <p-button 
+    (click)="onRemove()" 
+    icon="pi pi-times opacity-0 group-hover:opacity-100 transition-opacity"
+    [rounded]="true"
+    severity="danger"
+    size="small"
+    class="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+    aria-label="Eliminar card">
+  </p-button>
+  <textarea
+    #textareaRef
+    [value]="content()"
+    (input)="onContentChange($any($event.target).value); autoResize($event)"
+    class="w-full border-none outline-none bg-transparent leading-relaxed resize-none overflow-hidden"
+    placeholder="Escribe aquí..."
+    rows="1"></textarea>
+</div>

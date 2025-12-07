@@ -1,0 +1,50 @@
+<div class="card relative group">
+  <p-button 
+    (click)="onRemove()" 
+    icon="pi pi-times opacity-0 group-hover:opacity-100 transition-opacity"
+    [rounded]="true"
+    severity="danger"
+    size="small"
+    class="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+    aria-label="Eliminar card">
+  </p-button>
+  
+  <div class="space-y-3 mb-3">
+    @for (item of items(); track item.id; let i = $index) {
+      <div class="flex items-center gap-3">
+        <p-checkbox 
+          [binary]="true"
+          [ngModel]="item.checked"
+          (ngModelChange)="toggleItem(item.id)"
+          [inputId]="'check-' + item.id">
+        </p-checkbox>
+        <input 
+          type="text"
+          [value]="item.text"
+          (input)="updateItem(item.id, $any($event.target).value)"
+          (keydown)="onKeyDown($event, item.id, i)"
+          class="checklist-input flex-1 border-none outline-none bg-transparent placeholder:opacity-30"
+          [class]="item.checked ? 'line-through opacity-50' : ''"
+          placeholder="Nueva tarea...">
+        <p-button 
+          (click)="removeItem(item.id)"
+          icon="pi pi-times"
+          [text]="true"
+          [rounded]="true"
+          severity="danger"
+          size="small"
+          aria-label="Eliminar item">
+        </p-button>
+      </div>
+    }
+  </div>
+  
+  <p-button 
+    (click)="addItem()" 
+    icon="pi pi-plus"
+    [text]="true"
+    [rounded]="true"
+    size="small"
+    aria-label="Agregar item">
+  </p-button>
+</div>

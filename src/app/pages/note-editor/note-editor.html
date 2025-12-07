@@ -1,0 +1,48 @@
+<div class="min-h-screen">
+  <div class="mb-8">
+    <h1 
+      contenteditable="true"
+      (blur)="noteTitle.set($any($event.target).textContent || 'Mi Nota')"
+      class="text-3xl font-bold text-surface-900 outline-none focus:ring-2 focus:ring-primary rounded px-2 -mx-2 transition-all cursor-text"
+      [textContent]="noteTitle()">
+    </h1>
+  </div>
+
+  <app-masonry-grid class="mb-20">
+    @for (card of cards(); track card.id) {
+      @switch (card.type) {
+        @case ('paragraph') {
+          <app-paragraph-card
+            [content]="card.content || ''"
+            (contentChange)="updateCardContent(card.id, $event)"
+            (remove)="removeCard(card.id)">
+          </app-paragraph-card>
+        }
+        @case ('checklist') {
+          <app-checklist-card
+            [items]="card.items || []"
+            (itemsChange)="updateCardItems(card.id, $event)"
+            (remove)="removeCard(card.id)">
+          </app-checklist-card>
+        }
+        @case ('highlight') {
+          <app-highlight-card
+            [content]="card.content || ''"
+            (contentChange)="updateCardContent(card.id, $event)"
+            (remove)="removeCard(card.id)">
+          </app-highlight-card>
+        }
+      }
+    }
+
+    <button 
+      class="p-6 bg-primary/20 rounded-lg cursor-pointer w-24 text-3xl leading-none"
+      (click)="menu.toggle($event)"
+      aria-label="Agregar contenido">
+      +
+    </button>
+  </app-masonry-grid>
+
+  <!-- Menú popup -->
+  <p-menu #menu [model]="menuItems" [popup]="true"></p-menu>
+</div>

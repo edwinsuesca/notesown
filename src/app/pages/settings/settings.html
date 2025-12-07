@@ -1,0 +1,123 @@
+<div class="min-h-screen">
+  <div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-4xl font-bold text-surface-900 dark:text-surface-0 mb-2">Ajustes</h1>
+      <p class="text-surface-600 dark:text-surface-400">Personaliza la apariencia y el comportamiento de la aplicación</p>
+    </div>
+
+    <!-- Tema -->
+    <div class="card mb-6">
+      <h2 class="text-xl font-semibold text-surface-900 dark:text-surface-0 mb-1">Tema</h2>
+      <p class="text-sm text-surface-600 dark:text-surface-400 mb-4">Configura la apariencia de la aplicación</p>
+      
+      <!-- Seguir tema del sistema -->
+      <div class="flex items-center justify-between p-4 bg-surface-50 dark:bg-surface-800 rounded-lg mb-4">
+        <div class="flex-1 pr-4">
+          <div class="flex items-center gap-2 mb-1">
+            <i class="pi pi-desktop text-lg text-surface-700 dark:text-surface-300"></i>
+            <h3 class="font-semibold text-surface-900 dark:text-surface-0">Seguir tema del sistema</h3>
+          </div>
+          <p class="text-sm text-surface-600 dark:text-surface-400">
+            La aplicación cambiará automáticamente según la configuración de tu sistema operativo
+          </p>
+        </div>
+        <p-toggleswitch 
+          [ngModel]="followSystemTheme()"
+          (ngModelChange)="toggleFollowSystemTheme()">
+        </p-toggleswitch>
+      </div>
+
+      <!-- Selector manual de tema (deshabilitado si sigue el sistema) -->
+      <div class="flex items-center justify-between p-4 rounded-lg transition-opacity" [class.opacity-40]="followSystemTheme()">
+        <div class="flex-1 pr-4">
+          <div class="flex items-center gap-2 mb-1">
+            <i [class]="isDarkTheme() ? 'pi pi-moon' : 'pi pi-sun'" class="text-lg text-surface-700 dark:text-surface-300"></i>
+            <h3 class="font-semibold text-surface-900 dark:text-surface-0">Modo oscuro</h3>
+          </div>
+          <p class="text-sm text-surface-600 dark:text-surface-400">
+            {{ followSystemTheme() ? 'Desactiva "Seguir tema del sistema" para cambiar manualmente' : 'Activa o desactiva el modo oscuro' }}
+          </p>
+        </div>
+        <p-toggleswitch 
+          [ngModel]="isDarkTheme()"
+          (ngModelChange)="toggleDarkMode()"
+          [disabled]="followSystemTheme() || false">
+        </p-toggleswitch>
+      </div>
+    </div>
+
+    <!-- Color primario -->
+    <div class="card mb-6">
+      <h2 class="text-xl font-semibold text-surface-900 dark:text-surface-0 mb-1">Color primario</h2>
+      <p class="text-sm text-surface-600 dark:text-surface-400 mb-4">Selecciona el color principal de la interfaz</p>
+      
+      <div class="flex gap-3 flex-wrap">
+        @for (primaryColor of primaryColors(); track primaryColor.name) {
+          <button
+            type="button"
+            [title]="primaryColor.name"
+            (click)="updateColors($event, 'primary', primaryColor)"
+            [ngClass]="{
+              'outline outline-2 outline-primary outline-offset-2': primaryColor.name === selectedPrimaryColor(),
+              'hover:scale-110': true
+            }"
+            class="cursor-pointer w-10 h-10 rounded-full flex shrink-0 items-center justify-center shadow-md transition-all duration-200"
+            [style]="{
+              'background-color': primaryColor?.name === 'noir' ? 'var(--text-color)' : primaryColor?.palette?.['500']
+            }">
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Color de superficie -->
+    <div class="card mb-6">
+      <h2 class="text-xl font-semibold text-surface-900 dark:text-surface-0 mb-1">Color de superficie</h2>
+      <p class="text-sm text-surface-600 dark:text-surface-400 mb-4">Ajusta el tono de los fondos y superficies</p>
+      
+      <div class="flex gap-3 flex-wrap">
+        @for (surface of surfaces; track surface.name) {
+          <button
+            type="button"
+            [title]="surface.name"
+            (click)="updateColors($event, 'surface', surface)"
+            class="cursor-pointer w-10 h-10 rounded-full flex shrink-0 items-center justify-center shadow-md transition-all duration-200 hover:scale-110"
+            [ngClass]="{
+              'outline outline-2 outline-primary outline-offset-2': selectedSurfaceColor() ? selectedSurfaceColor() === surface.name : layoutService.layoutConfig().darkTheme ? surface.name === 'zinc' : surface.name === 'slate'
+            }"
+            [style]="{
+              'background-color': surface?.palette?.['500']
+            }">
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Presets -->
+    <div class="card mb-6">
+      <h2 class="text-xl font-semibold text-surface-900 dark:text-surface-0 mb-1">Estilo de diseño</h2>
+      <p class="text-sm text-surface-600 dark:text-surface-400 mb-4">Elige el preset de diseño de la interfaz</p>
+      
+      <p-selectbutton 
+        [options]="presets" 
+        [ngModel]="selectedPreset()" 
+        (ngModelChange)="onPresetChange($event)" 
+        [allowEmpty]="false">
+      </p-selectbutton>
+    </div>
+
+    <!-- Modo de menú -->
+    <div *ngIf="showMenuModeButton()" class="card mb-6">
+      <h2 class="text-xl font-semibold text-surface-900 dark:text-surface-0 mb-1">Modo de menú</h2>
+      <p class="text-sm text-surface-600 dark:text-surface-400 mb-4">Configura cómo se comporta el menú lateral</p>
+      
+      <p-selectbutton 
+        [ngModel]="menuMode()" 
+        (ngModelChange)="onMenuModeChange($event)" 
+        [options]="menuModeOptions" 
+        [allowEmpty]="false">
+      </p-selectbutton>
+    </div>
+  </div>
+</div>
