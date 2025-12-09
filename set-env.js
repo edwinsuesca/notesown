@@ -1,12 +1,15 @@
 const fs = require('fs');
-const targetPath = './src/environments/environment.prod.ts';
+
+// --- RUTAS DE LOS ARCHIVOS ---
+const targetPathProd = './src/environments/environment.prod.ts';
+const targetPathDev = './src/environments/environment.ts';
 const dirPath = './src/environments';
 
 if (!fs.existsSync(dirPath)) {
   fs.mkdirSync(dirPath, { recursive: true });
 }
 
-const envConfigFile = `export const environment = {
+const envConfigFileProd = `export const environment = {
   production: true,
   supabase: {
     url: '${process.env.SUPABASE_URL}',
@@ -15,11 +18,25 @@ const envConfigFile = `export const environment = {
 };
 `;
 
-fs.writeFile(targetPath, envConfigFile, (err) => {
-  if (err) {
-    console.error(err);
-    throw err;
-  } else {
-    console.log(`Angular environment.prod.ts file generated correctly at ${targetPath} \n`);
+const envConfigFileDev = `export const environment = {
+  production: false,
+  supabase: {
+    url: '${process.env.SUPABASE_URL || 'placeholder_dev_url'}', 
+    anonKey: '${process.env.SUPABASE_KEY || 'placeholder_dev_key'}'
   }
+};
+`;
+
+// --- ESCRITURA DE ARCHIVOS ---
+
+// Escribir el archivo de producción
+fs.writeFileSync(targetPathProd, envConfigFileProd, (err) => {
+  if (err) throw console.error(err);
+  console.log(`[OK] Generado environment.prod.ts en ${targetPathProd}`);
+});
+
+// Escribir el archivo base (environment.ts)
+fs.writeFileSync(targetPathDev, envConfigFileDev, (err) => {
+  if (err) throw console.error(err);
+  console.log(`[OK] Generado environment.ts en ${targetPathDev}`);
 });
