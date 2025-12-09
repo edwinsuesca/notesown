@@ -10,33 +10,28 @@
 
   <app-masonry-grid class="mb-20">
     @for (card of cards(); track card.id) {
-      @switch (card.type) {
-        @case ('paragraph') {
-          <app-paragraph-card
-            [content]="card.content || ''"
-            (contentChange)="updateCardContent(card.id, $event)"
-            (remove)="removeCard(card.id)">
-          </app-paragraph-card>
-        }
-        @case ('checklist') {
-          <app-checklist-card
-            [items]="card.items || []"
-            (itemsChange)="updateCardItems(card.id, $event)"
-            (remove)="removeCard(card.id)">
-          </app-checklist-card>
-        }
-        @case ('highlight') {
-          <app-highlight-card
-            [content]="card.content || ''"
-            (contentChange)="updateCardContent(card.id, $event)"
-            (remove)="removeCard(card.id)">
-          </app-highlight-card>
-        }
+      @if (card.isTextType) {
+      <app-text-card
+        [title]="card.title"
+        (titleChange)="updateCardTitle(card.id, $event)"
+        [textType]="card.textType!"
+        [content]="card.content || ''"
+        (contentChange)="updateCardContent(card.id, $event)"
+        (remove)="removeCard(card.id)">
+      </app-text-card>
+      } @else if (card.type === 'checklist') {
+        <app-checklist-card
+          [title]="card.title"
+          (titleChange)="updateCardTitle(card.id, $event)"
+          [items]="card.items || []"
+          (itemsChange)="updateCardItems(card.id, $event)"
+          (remove)="removeCard(card.id)">
+        </app-checklist-card>
       }
     }
 
     <button 
-      class="p-6 bg-primary/20 rounded-lg cursor-pointer w-24 text-3xl leading-none"
+      class="p-2 bg-primary/20 rounded-lg cursor-pointer w-16 text-3xl leading-none"
       (click)="menu.toggle($event)"
       aria-label="Agregar contenido">
       +

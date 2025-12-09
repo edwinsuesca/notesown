@@ -1,0 +1,44 @@
+<div [class]="cardClass()">
+  <p-button 
+    (click)="remove.emit()" 
+    icon="pi pi-times opacity-0 group-hover:opacity-100 transition-opacity"
+    [rounded]="true"
+    severity="danger"
+    size="small"
+    class="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+    aria-label="Eliminar card">
+  </p-button>
+  
+  <h3 
+    contenteditable="true"
+    (blur)="onTitleChange($any($event.target).textContent || 'Nueva tarjeta')"
+    class="!text-lg font-semibold text-surface-800 outline-none focus:ring-2 focus:ring-primary/50 rounded px-1 !m-0 !mb-2 transition-all cursor-text opacity-50"
+    [textContent]="title()">
+  </h3>
+  
+  @if (textType() === 'link' && !isEditing() && content()) {
+    <a 
+      [href]="content()" 
+      target="_blank" 
+      rel="noopener noreferrer"
+      (dblclick)="startEditing(); $event.preventDefault()"
+      class="text-blue-500 hover:text-blue-600 underline cursor-pointer break-all">
+      {{ content() }}
+    </a>
+    <button 
+      (click)="startEditing()"
+      class="ml-2 text-gray-400 hover:text-gray-600 text-xs"
+      title="Editar enlace">
+      <i class="pi pi-pencil"></i>
+    </button>
+  } @else {
+    <textarea
+    #textareaRef
+    [value]="content()"
+    (input)="onContentChange($any($event.target).value); autoResize($event)"
+    (blur)="textType() === 'link' ? stopEditing() : null"
+    [class]="textareaClass()"
+    [placeholder]="textType() === 'link' ? 'Pega o escribe un enlace...' : 'Escribe aquí...'"
+    rows="1"></textarea>
+  }
+</div>

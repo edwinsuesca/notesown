@@ -5,18 +5,17 @@ import { TooltipModule } from 'primeng/tooltip';
 import { AppMenu } from './app.menu';
 import { LayoutService } from '../service/layout.service';
 import { RouterModule } from '@angular/router';
+import { NotesTreeComponent } from '../../components/notes-tree/notes-tree.component';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, AppMenu, ButtonModule, TooltipModule, RouterModule],
+  imports: [CommonModule, AppMenu, ButtonModule, TooltipModule, RouterModule, NotesTreeComponent],
   template: ` 
     <div class="layout-sidebar flex flex-col">
-      <!-- Área principal para notas (futuro) -->
-      <div class="flex-1 overflow-y-auto p-4">
-        <div class="text-sm text-surface-500 dark:text-surface-400">
-          <!-- Aquí se renderizarán las notas -->
-        </div>
+      <!-- Área principal para notas -->
+      <div class="flex-1 overflow-y-auto">
+        <app-notes-tree></app-notes-tree>
       </div>
 
       <!-- Botón de nueva nota con routerLink -->

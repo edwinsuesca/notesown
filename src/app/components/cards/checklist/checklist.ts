@@ -12,14 +12,21 @@ export interface ChecklistItem {
 
 @Component({
   selector: 'app-checklist-card',
+  standalone: true,
   imports: [CommonModule, FormsModule, CheckboxModule, ButtonModule],
-  templateUrl: './checklist-card.html',
-  styleUrl: './checklist-card.css',
+  templateUrl: './checklist.html',
+  styleUrl: './checklist.css',
 })
 export class ChecklistCard {
+  title = input<string>('Nueva tarjeta');
+  titleChange = output<string>();
   items = input<ChecklistItem[]>([]);
   itemsChange = output<ChecklistItem[]>();
   remove = output<void>();
+
+  onTitleChange(value: string) {
+    this.titleChange.emit(value || 'Nueva tarjeta');
+  }
 
   addItem() {
     const newItems = [...this.items(), {
@@ -54,10 +61,6 @@ export class ChecklistCard {
   removeItem(id: string) {
     const newItems = this.items().filter(item => item.id !== id);
     this.itemsChange.emit(newItems);
-  }
-
-  onRemove() {
-    this.remove.emit();
   }
 
   onKeyDown(event: KeyboardEvent, itemId: string, index: number) {

@@ -1,6 +1,7 @@
-<div class="card relative group">
+<div class="card relative group !px-3 !py-2">
+  
   <p-button 
-    (click)="onRemove()" 
+    (click)="remove.emit()" 
     icon="pi pi-times opacity-0 group-hover:opacity-100 transition-opacity"
     [rounded]="true"
     severity="danger"
@@ -8,6 +9,13 @@
     class="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity"
     aria-label="Eliminar card">
   </p-button>
+  
+  <h3 
+    contenteditable="true"
+    (blur)="onTitleChange($any($event.target).textContent || 'Nueva tarjeta')"
+    class="text-lg font-semibold text-surface-800 outline-none focus:ring-2 focus:ring-primary/50 rounded px-1 -mx-1 mb-3 transition-all cursor-text"
+    [textContent]="title()">
+  </h3>
   
   <div class="space-y-3 mb-3">
     @for (item of items(); track item.id; let i = $index) {
