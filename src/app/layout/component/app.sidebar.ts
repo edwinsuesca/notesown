@@ -4,8 +4,10 @@ import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { AppMenu } from './app.menu';
 import { LayoutService } from '../service/layout.service';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { NotesTreeComponent } from '../../components/notes-tree/notes-tree.component';
+import { EditorStateService } from '../../services/editor-state.service';
+import { NoteService } from '../../services/note.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -18,11 +20,12 @@ import { NotesTreeComponent } from '../../components/notes-tree/notes-tree.compo
         <app-notes-tree></app-notes-tree>
       </div>
 
-      <!-- Botón de nueva nota con routerLink -->
+      <!-- Botón de nueva nota -->
       <p-button
         icon="pi pi-plus"
-        routerLink="/editor"
-        [pTooltip]="'Nueva nota'"
+        (onClick)="createNewNote()"
+        [disabled]="!isCreateNoteEnabled()"
+        [pTooltip]="isCreateNoteEnabled() ? 'Nueva nota' : 'Selecciona una carpeta primero'"
         label="Nueva nota"
         styleClass="w-full mb-4"
         tooltipPosition="top"/>
@@ -68,6 +71,9 @@ import { NotesTreeComponent } from '../../components/notes-tree/notes-tree.compo
 })
 export class AppSidebar {
   layoutService = inject(LayoutService);
+  editorState = inject(EditorStateService);
+  noteService = inject(NoteService);
+  router = inject(Router);
   
   isDarkTheme = computed(() => this.layoutService.layoutConfig().darkTheme);
   followSystemTheme = computed(() => this.layoutService.layoutConfig().followSystemTheme);
@@ -109,5 +115,48 @@ export class AppSidebar {
       followSystemTheme: true,
       darkTheme: systemTheme
     }));
+  }
+
+  /**
+   * Verifica si se puede crear una nueva nota
+   * Solo se puede crear si hay una carpeta seleccionada
+   */
+  isCreateNoteEnabled(): boolean {
+    return this.editorState.selectedFolder() !== null;
+  }
+
+  /**
+   * Crea una nueva nota en la carpeta seleccionada
+   */
+  createNewNote(): void {
+    const selectedFolder = this.editorState.selectedFolder();
+    
+    if (!selectedFolder) {
+      console.warn('No hay carpeta seleccionada');
+      return;
+    }
+
+    // Crear la nota en Supabase
+    this.noteService.createNote({
+      name: 'Nueva Nota',
+      folder_id: selectedFolder.id
+    }).subscribe({
+      next: (newNote) => {
+        console.log('Nota creada exitosamente:', newNote);
+        
+        // Establecer la nota recién creada como seleccionada
+        this.editorState.setSelectedNote(newNote);
+        
+        // Notificar que se debe actualizar el árbol de notas
+        this.editorState.notifyNoteCreated();
+        
+        // Navegar al editor si no estamos ya allí
+        this.router.navigate(['/editor']);
+      },
+      error: (error) => {
+        console.error('Error al crear la nota:', error);
+        // TODO: Mostrar mensaje de error al usuario
+      }
+    });
   }
 }

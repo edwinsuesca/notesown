@@ -1,43 +1,76 @@
 <div class="min-h-screen">
-  <div class="mb-8">
-    <h1 
-      contenteditable="true"
-      (blur)="noteTitle.set($any($event.target).textContent || 'Mi Nota')"
-      class="text-3xl font-bold text-surface-900 outline-none focus:ring-2 focus:ring-primary rounded px-2 -mx-2 transition-all cursor-text"
-      [textContent]="noteTitle()">
-    </h1>
-  </div>
+  <!-- Breadcrumb y título -->
+  @if (currentNote()) {
+    <div class="flex items-center gap-2 mb-8">
+      @if (selectedFolder()) {
+        <span class="text-surface-500 dark:text-surface-400">
+          <i class="pi pi-folder mr-1"></i>
+          {{ selectedFolder()?.name }}
+        </span>
+        <span class="text-surface-400">/</span>
+      }
+      <h1 
+        contenteditable="true"
+        (blur)="noteTitle.set($any($event.target).textContent || 'Mi Nota')"
+        class="text-3xl font-bold text-surface-900 dark:text-surface-100 outline-none focus:ring-2 focus:ring-primary rounded px-2 -mx-2 transition-all cursor-text"
+        [textContent]="noteTitle()">
+      </h1>
+    </div>
+  }
 
-  <app-masonry-grid class="mb-20">
-    @for (card of cards(); track card.id) {
-      @if (card.isTextType) {
-      <app-text-card
-        [title]="card.title"
-        (titleChange)="updateCardTitle(card.id, $event)"
-        [textType]="card.textType!"
-        [content]="card.content || ''"
-        (contentChange)="updateCardContent(card.id, $event)"
-        (remove)="removeCard(card.id)">
-      </app-text-card>
-      } @else if (card.type === 'checklist') {
-        <app-checklist-card
+  <!-- Estado vacío cuando hay carpeta pero no hay nota -->
+  @if (!currentNote() && selectedFolder()) {
+    <div class="flex flex-col items-center justify-center py-20 text-center">
+      <i class="pi pi-folder-open text-6xl text-surface-300 dark:text-surface-600 mb-4"></i>
+      <h2 class="text-2xl font-semibold text-surface-700 dark:text-surface-300 mb-2">
+        No hay notas en {{ selectedFolder()?.name }}
+      </h2>
+      <p class="text-surface-500 dark:text-surface-400 mb-6">
+        Crea tu primera nota en esta carpeta
+      </p>
+      <p-button
+        icon="pi pi-plus"
+        label="Nueva nota"
+        (onClick)="createNoteInCurrentFolder()"
+        severity="primary"
+        size="large">
+      </p-button>
+    </div>
+  }
+
+  <!-- Contenido del editor cuando hay nota -->
+  @if (currentNote()) {
+    <app-masonry-grid class="mb-20">
+      @for (card of cards(); track card.id) {
+        @if (card.isTextType) {
+        <app-text-card
           [title]="card.title"
           (titleChange)="updateCardTitle(card.id, $event)"
-          [items]="card.items || []"
-          (itemsChange)="updateCardItems(card.id, $event)"
+          [textType]="card.textType!"
+          [content]="card.content || ''"
+          (contentChange)="updateCardContent(card.id, $event)"
           (remove)="removeCard(card.id)">
-        </app-checklist-card>
+        </app-text-card>
+        } @else if (card.type === 'checklist') {
+          <app-checklist-card
+            [title]="card.title"
+            (titleChange)="updateCardTitle(card.id, $event)"
+            [items]="card.items || []"
+            (itemsChange)="updateCardItems(card.id, $event)"
+            (remove)="removeCard(card.id)">
+          </app-checklist-card>
+        }
       }
-    }
 
-    <button 
-      class="p-2 bg-primary/20 rounded-lg cursor-pointer w-16 text-3xl leading-none"
-      (click)="menu.toggle($event)"
-      aria-label="Agregar contenido">
-      +
-    </button>
-  </app-masonry-grid>
+      <button 
+        class="p-2 bg-primary/20 rounded-lg cursor-pointer w-16 text-3xl leading-none"
+        (click)="menu.toggle($event)"
+        aria-label="Agregar contenido">
+        +
+      </button>
+    </app-masonry-grid>
 
-  <!-- Menú popup -->
-  <p-menu #menu [model]="menuItems" [popup]="true"></p-menu>
+    <!-- Menú popup -->
+    <p-menu #menu [model]="menuItems" [popup]="true"></p-menu>
+  }
 </div>

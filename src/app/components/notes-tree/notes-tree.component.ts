@@ -7,6 +7,7 @@ import { FolderService } from '../../services/folder.service';
 import { NoteService } from '../../services/note.service';
 import { Note } from '../../models/note.model';
 import { Folder } from '../../models/folder.model';
+import { EditorStateService } from '../../services/editor-state.service';
 
 @Component({
   selector: 'app-notes-tree',
@@ -132,11 +133,20 @@ export class NotesTreeComponent implements OnInit, OnDestroy {
 
   constructor(
     private folderService: FolderService,
-    private noteService: NoteService
+    private noteService: NoteService,
+    private editorState: EditorStateService
   ) {}
 
   ngOnInit(): void {
     this.loadFolders();
+    
+    // Suscribirse a eventos de refresco del árbol
+    this.editorState.refreshNotesTree
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        console.log('Refrescando árbol de notas...');
+        this.refresh();
+      });
   }
 
   ngOnDestroy(): void {
@@ -232,10 +242,60 @@ export class NotesTreeComponent implements OnInit, OnDestroy {
     if (node.data.type === 'folder') {
       // Toggle expand/collapse al hacer clic en carpetas
       node.expanded = !node.expanded;
+      
+      // Establecer la carpeta seleccionada
+      this.editorState.setSelectedFolder({
+        id: node.data.id,
+        name: node.label || 'Carpeta'
+      });
+      
+      // Si la carpeta tiene notas, seleccionar la primera automáticamente
+      if (node.children && node.children.length > 0) {
+        const firstNote = node.children[0];
+        
+        // Cargar la primera nota
+        this.noteService.getNoteById(firstNote.data.id)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: (note) => {
+              this.editorState.setSelectedNote(note);
+              console.log('Primera nota seleccionada automáticamente:', note);
+            },
+            error: (error) => {
+              console.error('Error al cargar la primera nota:', error);
+            }
+          });
+      } else {
+        // Si no hay notas, limpiar la selección
+        this.editorState.setSelectedNote(null);
+      }
+      
       console.log('Carpeta seleccionada:', node.data);
     } else if (node.data.type === 'note') {
       console.log('Nota seleccionada:', node.data);
-      // TODO: Implementar navegación a la nota
+      
+      // Cargar la nota completa desde el servicio
+      this.noteService.getNoteById(node.data.id)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (note) => {
+            // Establecer la carpeta padre como seleccionada usando el folder_id de la nota
+            const parentFolder = this.findFolderById(note.folder_id);
+            if (parentFolder) {
+              this.editorState.setSelectedFolder({
+                id: parentFolder.data.id,
+                name: parentFolder.label || 'Carpeta'
+              });
+            }
+            
+            // Establecer la nota seleccionada
+            this.editorState.setSelectedNote(note);
+            console.log('Nota cargada en el estado:', note);
+          },
+          error: (error) => {
+            console.error('Error al cargar la nota:', error);
+          }
+        });
     }
   }
 
@@ -250,9 +310,87 @@ export class NotesTreeComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Encuentra una carpeta por su ID
+   * @param folderId ID de la carpeta a buscar
+   * @returns Nodo de la carpeta o null
+   */
+  private findFolderById(folderId: number): TreeNode | null {
+    return this.treeNodes.find(node => node.data.id === folderId) || null;
+  }
+
+  /**
+   * Encuentra la carpeta padre de un nodo (nota)
+   * @param noteNode Nodo de la nota
+   * @returns Nodo de la carpeta padre o null
+   */
+  private findParentFolder(noteNode: TreeNode): TreeNode | null {
+    // Buscar en todos los nodos del árbol
+    for (const folderNode of this.treeNodes) {
+      if (folderNode.children) {
+        // Verificar si la nota está en los hijos de esta carpeta
+        const foundNote = folderNode.children.find(child => child.key === noteNode.key);
+        if (foundNote) {
+          return folderNode;
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Guarda el estado de expansión de las carpetas
+   * @returns Map con el estado de expansión por key del nodo
+   */
+  private saveExpansionState(): Map<string, boolean> {
+    const expansionState = new Map<string, boolean>();
+    
+    this.treeNodes.forEach(node => {
+      if (node.key) {
+        expansionState.set(node.key, node.expanded || false);
+      }
+    });
+    
+    return expansionState;
+  }
+
+  /**
+   * Restaura el estado de expansión de las carpetas
+   * @param expansionState Map con el estado de expansión guardado
+   */
+  private restoreExpansionState(expansionState: Map<string, boolean>): void {
+    this.treeNodes.forEach(node => {
+      if (node.key && expansionState.has(node.key)) {
+        node.expanded = expansionState.get(node.key);
+      }
+    });
+  }
+
+  /**
    * Recarga las carpetas (útil para actualizar después de crear/editar)
+   * Preserva el estado de expansión de las carpetas
    */
   refresh(): void {
-    this.loadFolders();
+    // Guardar estado de expansión antes de recargar
+    const expansionState = this.saveExpansionState();
+    
+    // Recargar carpetas y notas en paralelo
+    forkJoin({
+      folders: this.folderService.getFolders(),
+      notes: this.noteService.getNotes()
+    })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: ({ folders, notes }) => {
+          this.treeNodes = this.convertFoldersToTreeNodes(folders, notes);
+          
+          // Restaurar estado de expansión después de recargar
+          this.restoreExpansionState(expansionState);
+          
+          console.log('Árbol refrescado con estado de expansión preservado');
+        },
+        error: (error) => {
+          console.error('Error al refrescar el árbol:', error);
+        }
+      });
   }
 }
