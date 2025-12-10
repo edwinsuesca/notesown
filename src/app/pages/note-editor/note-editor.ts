@@ -118,9 +118,6 @@ export class NoteEditor implements OnInit, OnDestroy {
     // El guardado individual se maneja en cada método de actualización
     effect(() => {
       const cards = this.cards();
-      if (!this.isLoadingNote && this.noteId()) {
-        console.log('📝 Tarjetas actualizadas:', cards.length);
-      }
     });
 
     // Effect para cargar nota cuando se selecciona
@@ -225,9 +222,7 @@ export class NoteEditor implements OnInit, OnDestroy {
           this.noteService.updateReadAt(noteId, note.updated_at)
             .pipe(takeUntil(this.destroy$))
             .subscribe({
-              next: () => {
-                console.log('✅ read_at actualizado');
-              },
+              next: () => {},
               error: (error) => {
                 console.error('Error al actualizar read_at:', error);
               }
@@ -389,17 +384,27 @@ export class NoteEditor implements OnInit, OnDestroy {
       return;
     }
 
-    console.log('💾 Auto-guardando título:', trimmedTitle);
-    
     this.noteService.updateNote(currentNoteId, { name: trimmedTitle }).subscribe({
       next: (updatedNote) => {
-        console.log('✅ Título actualizado:', updatedNote.name);
         this.currentNote.set(updatedNote);
+        
+        // Actualizar breadcrumb
+        const folder = this.selectedFolder();
+        if (folder) {
+          this.breadcrumbItems.set([
+            { 
+              label: this.truncateText(folder.name, 20),
+              command: () => this.router.navigate([folder.id])
+            },
+            { label: this.truncateText(updatedNote.name, 30) }
+          ]);
+        }
+        
         // Notificar al árbol para que actualice el nombre
         this.editorState.notifyNoteCreated();
       },
       error: (error) => {
-        console.error('❌ Error al actualizar título:', error);
+        console.error('Error al actualizar título:', error);
       }
     });
   }
@@ -415,8 +420,6 @@ export class NoteEditor implements OnInit, OnDestroy {
       return;
     }
 
-    console.log('💾 Auto-guardando item:', item.title);
-    
     // Preparar el DTO para actualización
     const updateDto: UpdateItemNoteDto = {
       title: item.title,
@@ -428,11 +431,9 @@ export class NoteEditor implements OnInit, OnDestroy {
     };
 
     this.itemNoteService.updateItemNote(item.id, updateDto).subscribe({
-      next: () => {
-        console.log('✅ Item actualizado:', item.title);
-      },
+      next: () => {},
       error: (error) => {
-        console.error('❌ Error al actualizar item:', error);
+        console.error('Error al actualizar item:', error);
       }
     });
   }
@@ -447,8 +448,6 @@ export class NoteEditor implements OnInit, OnDestroy {
     if (!currentNoteId) {
       return;
     }
-
-    console.log('💾 Creando item en BD:', item.title);
     
     const createDto: CreateItemNoteDto = {
       // No enviamos id, la base de datos lo genera automáticamente
@@ -462,9 +461,7 @@ export class NoteEditor implements OnInit, OnDestroy {
     };
 
     this.itemNoteService.createItemNote(createDto).subscribe({
-      next: (createdItem) => {
-        console.log('✅ Item creado en BD con ID:', createdItem.id);
-        
+      next: (createdItem) => {        
         // Actualizar el ID local con el ID generado por la base de datos
         this.cards.update(cards =>
           cards.map(card => card.id === item.id ? { ...card, id: createdItem.id } : card)
@@ -479,7 +476,7 @@ export class NoteEditor implements OnInit, OnDestroy {
         this.setupItemDebounce(createdItem.id);
       },
       error: (error) => {
-        console.error('❌ Error al crear item:', error);
+        console.error('Error al crear item:', error);
       }
     });
   }
@@ -488,15 +485,11 @@ export class NoteEditor implements OnInit, OnDestroy {
    * Elimina un item de la base de datos
    * @param itemId ID del item a eliminar
    */
-  private deleteItemFromDatabase(itemId: string): void {
-    console.log('🗑️ Eliminando item de BD:', itemId);
-    
+  private deleteItemFromDatabase(itemId: string): void {    
     this.itemNoteService.deleteItemNote(itemId).subscribe({
-      next: () => {
-        console.log('✅ Item eliminado de BD');
-      },
+      next: () => {},
       error: (error) => {
-        console.error('❌ Error al eliminar item:', error);
+        console.error('Error al eliminar item:', error);
       }
     });
   }
@@ -543,9 +536,7 @@ export class NoteEditor implements OnInit, OnDestroy {
     }
 
     this.itemNoteService.syncItemsForNote(currentNoteId, items).subscribe({
-      next: (savedItems) => {
-        console.log('Items guardados exitosamente:', savedItems);
-      },
+      next: () => {},
       error: (error) => {
         console.error('Error al guardar items:', error);
       }
@@ -573,7 +564,6 @@ export class NoteEditor implements OnInit, OnDestroy {
         }));
         
         this.cards.set(editorCards);
-        console.log('Items cargados exitosamente:', editorCards);
         
         // Configurar debounce para cada item cargado
         editorCards.forEach(card => {
@@ -605,9 +595,7 @@ export class NoteEditor implements OnInit, OnDestroy {
    * Carga una nota completa con sus items
    * @param note Nota a cargar
    */
-  loadNote(note: Note): void {
-    console.log('Cargando nota:', note);
-    
+  loadNote(note: Note): void {    
     // Activar flag para evitar auto-guardado durante la carga
     this.isLoadingNote = true;
     
@@ -647,8 +635,6 @@ export class NoteEditor implements OnInit, OnDestroy {
       folder_id: folder.id
     }).subscribe({
       next: (newNote) => {
-        console.log('Nota creada exitosamente:', newNote);
-        
         // Establecer la nota recién creada como seleccionada
         this.editorState.setSelectedNote(newNote);
         

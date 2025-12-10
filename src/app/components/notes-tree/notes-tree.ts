@@ -49,7 +49,6 @@ export class NotesTreeComponent implements OnInit, OnDestroy {
     this.editorState.refreshNotesTree
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
-        console.log('Refrescando árbol de notas...');
         this.refresh();
       });
   }
@@ -146,17 +145,8 @@ export class NotesTreeComponent implements OnInit, OnDestroy {
     
     if (node.data.type === 'folder') {
       // Toggle expand/collapse al hacer clic en carpetas
-      node.expanded = !node.expanded;
-      
-      const folderId = node.data.id;
-      
-      // Navegar a la vista de carpeta
-      this.router.navigate([folderId]);
-      
-      console.log('Carpeta seleccionada:', node.data);
+      node.expanded = !node.expanded;      
     } else if (node.data.type === 'note') {
-      console.log('Nota seleccionada:', node.data);
-      
       const noteId = node.data.id;
       
       // Encontrar la carpeta padre
@@ -274,8 +264,6 @@ export class NotesTreeComponent implements OnInit, OnDestroy {
           
           // Restaurar estado de expansión después de recargar
           this.restoreExpansionState(expansionState);
-          
-          console.log('Árbol refrescado con estado de expansión preservado');
         },
         error: (error) => {
           console.error('Error al refrescar el árbol:', error);

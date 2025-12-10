@@ -32,11 +32,9 @@ const envConfigFileDev = `export const environment = {
 // Escribir el archivo de producción
 fs.writeFileSync(targetPathProd, envConfigFileProd, (err) => {
   if (err) throw console.error(err);
-  console.log(`[OK] Generado environment.prod.ts en ${targetPathProd}`);
 });
 
 // Escribir el archivo base (environment.ts)
 fs.writeFileSync(targetPathDev, envConfigFileDev, (err) => {
   if (err) throw console.error(err);
-  console.log(`[OK] Generado environment.ts en ${targetPathDev}`);
 });

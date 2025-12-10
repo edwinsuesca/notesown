@@ -142,8 +142,6 @@ export class AppSidebar {
       folder_id: selectedFolder.id
     }).subscribe({
       next: (newNote) => {
-        console.log('Nota creada exitosamente:', newNote);
-        
         // Establecer la nota recién creada como seleccionada
         this.editorState.setSelectedNote(newNote);
         

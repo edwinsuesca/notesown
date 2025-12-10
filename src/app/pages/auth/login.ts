@@ -12,10 +12,10 @@ import { AppFloatingConfigurator } from '../../layout/component/app.floatingconf
 import { AuthService } from '../../services/auth.service';
 
 @Component({
-    selector: 'app-login',
-    standalone: true,
-    imports: [ButtonModule, CheckboxModule, InputTextModule, PasswordModule, FormsModule, RouterModule, RippleModule, AppFloatingConfigurator, MessageModule, CommonModule],
-    template: `
+  selector: 'app-login',
+  standalone: true,
+  imports: [ButtonModule, CheckboxModule, InputTextModule, PasswordModule, FormsModule, RouterModule, RippleModule, AppFloatingConfigurator, MessageModule, CommonModule],
+  template: `
         <app-floating-configurator />
         <div class="flex flex-col items-center justify-center min-h-screen min-w-screen overflow-hidden">
           <div class="py-20 px-8 sm:px-20">
@@ -54,58 +54,57 @@ import { AuthService } from '../../services/auth.service';
     `
 })
 export class Login {
-    email: string = '';
-    password: string = '';
-    checked: boolean = false;
-    loading: boolean = false;
-    errorMessage: string = '';
+  email: string = '';
+  password: string = '';
+  checked: boolean = false;
+  loading: boolean = false;
+  errorMessage: string = '';
 
-    constructor(
-        private authService: AuthService,
-        private router: Router
-    ) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) { }
 
-    onLogin(): void {
-        if (!this.email || !this.password) {
-            this.errorMessage = 'Por favor ingrese email y contraseña';
-            return;
+  onLogin(): void {
+    if (!this.email || !this.password) {
+      this.errorMessage = 'Por favor ingrese email y contraseña';
+      return;
+    }
+
+    this.loading = true;
+    this.errorMessage = '';
+
+    this.authService.login({
+      email: this.email,
+      password: this.password
+    }).subscribe({
+      next: () => {
+        // Redirigir a la ruta principal o a la ruta de retorno
+        const returnUrl = this.getReturnUrl();
+        this.router.navigate([returnUrl]);
+      },
+      error: (error) => {
+        this.loading = false;
+        console.error('Error en login:', error);
+
+        // Manejar diferentes tipos de errores
+        if (error.message?.includes('Invalid login credentials')) {
+          this.errorMessage = 'Credenciales inválidas. Verifica tu email y contraseña.';
+        } else if (error.message?.includes('Email not confirmed')) {
+          this.errorMessage = 'Por favor confirma tu email antes de iniciar sesión.';
+        } else {
+          this.errorMessage = error.message || 'Error al iniciar sesión. Intenta nuevamente.';
         }
+      },
+      complete: () => {
+        this.loading = false;
+      }
+    });
+  }
 
-        this.loading = true;
-        this.errorMessage = '';
-
-        this.authService.login({
-            email: this.email,
-            password: this.password
-        }).subscribe({
-            next: (user) => {
-                console.log('Login exitoso:', user);
-                // Redirigir a la ruta principal o a la ruta de retorno
-                const returnUrl = this.getReturnUrl();
-                this.router.navigate([returnUrl]);
-            },
-            error: (error) => {
-                this.loading = false;
-                console.error('Error en login:', error);
-                
-                // Manejar diferentes tipos de errores
-                if (error.message?.includes('Invalid login credentials')) {
-                    this.errorMessage = 'Credenciales inválidas. Verifica tu email y contraseña.';
-                } else if (error.message?.includes('Email not confirmed')) {
-                    this.errorMessage = 'Por favor confirma tu email antes de iniciar sesión.';
-                } else {
-                    this.errorMessage = error.message || 'Error al iniciar sesión. Intenta nuevamente.';
-                }
-            },
-            complete: () => {
-                this.loading = false;
-            }
-        });
-    }
-
-    private getReturnUrl(): string {
-        // Obtener la URL de retorno de los query params
-        const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get('returnUrl') || '/';
-    }
+  private getReturnUrl(): string {
+    // Obtener la URL de retorno de los query params
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('returnUrl') || '/';
+  }
 }

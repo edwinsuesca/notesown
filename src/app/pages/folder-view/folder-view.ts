@@ -7,7 +7,8 @@ import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
 import { BreadcrumbModule } from 'primeng/breadcrumb';
-import { MenuItem } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { MenuItem, ConfirmationService } from 'primeng/api';
 import { NoteService } from '../../services/note.service';
 import { FolderService } from '../../services/folder.service';
 import { EditorStateService } from '../../services/editor-state.service';
@@ -17,7 +18,8 @@ import { Folder } from '../../models/folder.model';
 @Component({
   selector: 'app-folder-view',
   standalone: true,
-  imports: [CommonModule, CardModule, ButtonModule, SkeletonModule, BreadcrumbModule],
+  imports: [CommonModule, CardModule, ButtonModule, SkeletonModule, BreadcrumbModule, ConfirmDialogModule],
+  providers: [ConfirmationService],
   template: `
     <div class="min-h-screen p-4">
       <!-- Breadcrumb -->
@@ -32,13 +34,26 @@ import { Folder } from '../../models/folder.model';
       }
 
       <!-- Header -->
-      @if (folder()) {
+      @if (folder() && !error()) {
         <div class="mb-6">
-          <div class="flex items-center gap-3 mb-2">
-            <i class="pi pi-folder text-4xl text-primary"></i>
-            <h1 class="text-4xl font-bold text-surface-900 dark:text-surface-100">
-              {{ truncateText(folder()?.name || '', 50) }}
-            </h1>
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-3 flex-1">
+              <i class="pi pi-folder text-4xl text-primary"></i>
+              <h1 
+                contenteditable="true"
+                (blur)="updateFolderName($any($event.target).textContent || folder()?.name || '')"
+                class="text-4xl font-bold text-surface-900 dark:text-surface-100 outline-none focus:ring-2 focus:ring-primary rounded px-2 -mx-2 transition-all cursor-text"
+                [textContent]="folder()?.name">
+              </h1>
+            </div>
+            <p-button
+              icon="pi pi-trash"
+              severity="danger"
+              [outlined]="true"
+              (onClick)="confirmDeleteFolder()"
+              pTooltip="Eliminar carpeta"
+              tooltipPosition="left">
+            </p-button>
           </div>
           <p class="text-surface-600 dark:text-surface-400">
             {{ notes().length }} {{ notes().length === 1 ? 'nota' : 'notas' }}
@@ -123,6 +138,9 @@ import { Folder } from '../../models/folder.model';
         </div>
       }
     </div>
+
+    <!-- Confirm Dialog -->
+    <p-confirmDialog></p-confirmDialog>
   `,
   styles: [`
     :host {
@@ -136,13 +154,13 @@ export class FolderView implements OnInit, OnDestroy {
   loading = signal(true);
   error = signal<string | null>(null);
   breadcrumbItems = signal<MenuItem[]>([]);
-  
+
   breadcrumbHome: MenuItem = {
     icon: 'pi pi-home',
     label: 'Inicio',
     command: () => this.router.navigate(['/dashboard'])
   };
-  
+
   private destroy$ = new Subject<void>();
   private folderId: number | null = null;
 
@@ -151,8 +169,9 @@ export class FolderView implements OnInit, OnDestroy {
     public router: Router,
     private noteService: NoteService,
     private folderService: FolderService,
-    private editorState: EditorStateService
-  ) {}
+    private editorState: EditorStateService,
+    private confirmationService: ConfirmationService
+  ) { }
 
   ngOnInit(): void {
     this.route.params
@@ -185,20 +204,20 @@ export class FolderView implements OnInit, OnDestroy {
             this.loading.set(false);
             return;
           }
-          
+
           this.folder.set(folder);
-          
+
           // Configurar breadcrumb
           this.breadcrumbItems.set([
             { label: this.truncateText(folder.name, 30) }
           ]);
-          
+
           // Establecer carpeta seleccionada en el estado global
           this.editorState.setSelectedFolder({
             id: folder.id,
             name: folder.name
           });
-          
+
           // Limpiar nota seleccionada
           this.editorState.setSelectedNote(null);
         },
@@ -241,7 +260,6 @@ export class FolderView implements OnInit, OnDestroy {
       folder_id: this.folderId
     }).subscribe({
       next: (newNote) => {
-        console.log('Nota creada:', newNote);
         this.editorState.notifyNoteCreated();
         this.openNote(newNote.id);
       },
@@ -253,7 +271,7 @@ export class FolderView implements OnInit, OnDestroy {
 
   formatDate(dateString?: string): string {
     if (!dateString) return 'Sin fecha';
-    
+
     const date = new Date(dateString);
     return date.toLocaleDateString('es-ES', {
       year: 'numeric',
@@ -265,5 +283,90 @@ export class FolderView implements OnInit, OnDestroy {
   truncateText(text: string, maxLength: number): string {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + '...';
+  }
+
+  updateFolderName(newName: string): void {
+    const trimmedName = newName.trim();
+    const currentFolder = this.folder();
+
+    if (!currentFolder || !trimmedName || trimmedName === currentFolder.name) {
+      return;
+    }
+
+    this.folderService.updateFolder(currentFolder.id, { name: trimmedName })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (updatedFolder) => {
+          this.folder.set(updatedFolder);
+
+          // Actualizar breadcrumb
+          this.breadcrumbItems.set([
+            { label: this.truncateText(updatedFolder.name, 30) }
+          ]);
+
+          // Actualizar estado global
+          this.editorState.setSelectedFolder({
+            id: updatedFolder.id,
+            name: updatedFolder.name
+          });
+
+          // Refrescar árbol de notas
+          this.editorState.notifyNoteCreated();
+        },
+        error: (error) => {
+          console.error('Error al actualizar nombre de carpeta:', error);
+        }
+      });
+  }
+
+  confirmDeleteFolder(): void {
+    const currentFolder = this.folder();
+    const notesList = this.notes();
+
+    if (!currentFolder) return;
+
+    // Crear lista HTML de notas
+    let notesListHtml = '';
+    if (notesList.length > 0) {
+      notesListHtml = '<ul class="text-left mt-3 mb-0">';
+      notesList.forEach(note => {
+        notesListHtml += `<li class="mb-1">• ${note.name}</li>`;
+      });
+      notesListHtml += '</ul>';
+    }
+
+    this.confirmationService.confirm({
+      header: '¿Eliminar carpeta?',
+      message: notesList.length > 0
+        ? `Se eliminarán las siguientes ${notesList.length} ${notesList.length === 1 ? 'nota' : 'notas'}:${notesListHtml}`
+        : `¿Estás seguro de que deseas eliminar la carpeta "${currentFolder.name}"?`,
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Eliminar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => {
+        this.deleteFolder();
+      }
+    });
+  }
+
+  private deleteFolder(): void {
+    const currentFolder = this.folder();
+    if (!currentFolder) return;
+
+    this.folderService.deleteFolder(currentFolder.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          // Refrescar árbol de notas
+          this.editorState.notifyNoteCreated();
+
+          // Navegar al dashboard
+          this.router.navigate(['/dashboard']);
+        },
+        error: (error) => {
+          console.error('Error al eliminar carpeta:', error);
+        }
+      });
   }
 }
