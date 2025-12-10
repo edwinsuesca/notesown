@@ -10,6 +10,8 @@ import { PrimeNG } from 'primeng/config';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { ButtonModule } from 'primeng/button';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { BreadcrumbModule } from 'primeng/breadcrumb';
+import { MenuItem } from 'primeng/api';
 import { LayoutService } from '../../layout/service/layout.service';
 
 const presets = {
@@ -41,7 +43,7 @@ declare type SurfacesType = {
 @Component({
     selector: 'app-settings',
     standalone: true,
-    imports: [CommonModule, FormsModule, SelectButtonModule, ButtonModule, ToggleSwitchModule],
+    imports: [CommonModule, FormsModule, SelectButtonModule, ButtonModule, ToggleSwitchModule, BreadcrumbModule],
     templateUrl: './settings.html',
     styleUrl: './settings.css'
 })
@@ -55,6 +57,14 @@ export class Settings {
     presets = Object.keys(presets);
 
     showMenuModeButton = signal(!this.router.url.includes('auth'));
+
+    breadcrumbItems: MenuItem[] = [{ label: 'Configuración' }];
+    
+    breadcrumbHome: MenuItem = {
+        icon: 'pi pi-home',
+        label: 'Inicio',
+        command: () => this.router.navigate(['/dashboard'])
+    };
 
     menuModeOptions = [
         { label: 'Static', value: 'static' },

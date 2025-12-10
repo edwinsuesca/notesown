@@ -1,0 +1,24 @@
+<div class="notes-tree-container">
+  <p-tree [value]="treeNodes" [loading]="loading" class="w-full border-none bg-transparent" [filter]="false"
+    [propagateSelectionDown]="false" [propagateSelectionUp]="false">
+    <ng-template let-node pTemplate="default">
+      <div class="tree-node-content" [class.selected]="isNodeSelected(node)" (click)="onNodeClick(node, $event)">
+        <i [class]="getNodeIcon(node)"></i>
+        <span class="tree-node-label">{{ node.label }}</span>
+      </div>
+    </ng-template>
+  </p-tree>
+
+  @if (loading) {
+    <div class="text-center py-4">
+      <i class="pi pi-spin pi-spinner text-2xl"></i>
+    </div>
+  }
+
+  @if (!loading && treeNodes.length === 0) {
+    <div class="text-center py-4 text-surface-500 dark:text-surface-400">
+      <i class="pi pi-folder-open text-3xl mb-2"></i>
+      <p class="text-sm">No hay carpetas aún</p>
+    </div>
+  }
+</div>

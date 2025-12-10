@@ -4,6 +4,8 @@
 export interface Note {
   id: number;
   created_at: string;
+  updated_at?: string;
+  read_at?: string;
   folder_id: number;
   name: string;
   user_id: string;

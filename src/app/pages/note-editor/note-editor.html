@@ -1,14 +1,45 @@
 <div class="min-h-screen">
-  <!-- Breadcrumb y título -->
-  @if (currentNote()) {
-    <div class="flex items-center gap-2 mb-8">
-      @if (selectedFolder()) {
-        <span class="text-surface-500 dark:text-surface-400">
-          <i class="pi pi-folder mr-1"></i>
-          {{ selectedFolder()?.name }}
-        </span>
-        <span class="text-surface-400">/</span>
-      }
+  <!-- Error State -->
+  @if (error()) {
+    <div class="flex flex-col items-center justify-center py-20 text-center">
+      <i class="pi pi-exclamation-triangle text-6xl text-red-500 mb-4"></i>
+      <h2 class="text-2xl font-semibold text-surface-700 dark:text-surface-300 mb-2">
+        Error
+      </h2>
+      <p class="text-surface-600 dark:text-surface-400 mb-6">
+        {{ error() }}
+      </p>
+      <div class="flex gap-3">
+        <p-button
+          icon="pi pi-arrow-left"
+          label="Volver"
+          (onClick)="router.navigate([selectedFolder()?.id || '/dashboard'])"
+          severity="secondary">
+        </p-button>
+        <p-button
+          icon="pi pi-home"
+          label="Ir a inicio"
+          (onClick)="router.navigate(['/dashboard'])"
+          severity="secondary">
+        </p-button>
+      </div>
+    </div>
+  }
+
+  <!-- Breadcrumb -->
+  @if (currentNote() && !error()) {
+    <div class="mb-4">
+      <p-breadcrumb 
+        [model]="breadcrumbItems()" 
+        [home]="breadcrumbHome"
+        styleClass="bg-transparent border-0 p-0">
+      </p-breadcrumb>
+    </div>
+  }
+
+  <!-- Título -->
+  @if (currentNote() && !error()) {
+    <div class="mb-8">
       <h1 
         contenteditable="true"
         (blur)="noteTitle.set($any($event.target).textContent || 'Mi Nota')"

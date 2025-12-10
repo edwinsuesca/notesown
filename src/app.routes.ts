@@ -9,9 +9,11 @@ export const appRoutes: Routes = [
         component: AppLayout,
         canActivate: [authGuard],
         children: [
-            { path: '', pathMatch: 'full', redirectTo: 'editor' },
-            { path: 'editor', loadComponent: () => import('./app/pages/note-editor/note-editor').then(m => m.NoteEditor) },
-            { path: 'settings', loadComponent: () => import('./app/pages/settings/settings').then(m => m.Settings) }
+            { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+            { path: 'dashboard', loadComponent: () => import('./app/pages/dashboard/dashboard').then(m => m.Dashboard) },
+            { path: 'settings', loadComponent: () => import('./app/pages/settings/settings').then(m => m.Settings) },
+            { path: ':folderId', loadComponent: () => import('./app/pages/folder-view/folder-view').then(m => m.FolderView) },
+            { path: ':folderId/:noteId', loadComponent: () => import('./app/pages/note-editor/note-editor').then(m => m.NoteEditor) }
         ]
     },
     { path: 'notfound', component: Notfound },

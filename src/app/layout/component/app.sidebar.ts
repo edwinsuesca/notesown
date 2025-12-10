@@ -5,7 +5,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { AppMenu } from './app.menu';
 import { LayoutService } from '../service/layout.service';
 import { RouterModule, Router } from '@angular/router';
-import { NotesTreeComponent } from '../../components/notes-tree/notes-tree.component';
+import { NotesTreeComponent } from '../../components/notes-tree/notes-tree';
 import { EditorStateService } from '../../services/editor-state.service';
 import { NoteService } from '../../services/note.service';
 
@@ -150,8 +150,8 @@ export class AppSidebar {
         // Notificar que se debe actualizar el árbol de notas
         this.editorState.notifyNoteCreated();
         
-        // Navegar al editor si no estamos ya allí
-        this.router.navigate(['/editor']);
+        // Navegar a la nota recién creada
+        this.router.navigate([selectedFolder.id, newNote.id]);
       },
       error: (error) => {
         console.error('Error al crear la nota:', error);

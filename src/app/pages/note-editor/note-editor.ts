@@ -1,8 +1,10 @@
-import { Component, effect, signal, ViewChild, OnDestroy } from '@angular/core';
+import { Component, effect, signal, ViewChild, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ChecklistCard, ChecklistItem } from '../../components/cards/checklist/checklist';
 import { ButtonModule } from 'primeng/button';
 import { Menu, MenuModule } from 'primeng/menu';
+import { BreadcrumbModule } from 'primeng/breadcrumb';
 import { MenuItem } from 'primeng/api';
 import { MasonryGrid } from '../../components/masonry-grid/masonry-grid';
 import { TextCard } from '@/components/cards/text-card/text-card';
@@ -10,6 +12,7 @@ import { ItemNoteService } from '@/services/item-note.service';
 import { CreateItemNoteDto, UpdateItemNoteDto } from '@/models/item-note.model';
 import { EditorStateService } from '@/services/editor-state.service';
 import { NoteService } from '@/services/note.service';
+import { FolderService } from '@/services/folder.service';
 import { Note } from '@/models/note.model';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -33,6 +36,7 @@ export interface ItemNote {
     CommonModule,
     ButtonModule,
     MenuModule,
+    BreadcrumbModule,
     MasonryGrid,
     TextCard,
     ChecklistCard,
@@ -40,7 +44,7 @@ export interface ItemNote {
   templateUrl: './note-editor.html',
   styleUrl: './note-editor.css',
 })
-export class NoteEditor implements OnDestroy {
+export class NoteEditor implements OnInit, OnDestroy {
   @ViewChild('menu') menu!: Menu;
   
   cards = signal<ItemNote[]>([]);
@@ -48,6 +52,14 @@ export class NoteEditor implements OnDestroy {
   noteId = signal<number | null>(null); // ID de la nota actual (null si es nueva)
   selectedFolder = signal<{ id: number; name: string } | null>(null);
   currentNote = signal<Note | null>(null);
+  error = signal<string | null>(null);
+  breadcrumbItems = signal<MenuItem[]>([]);
+  
+  breadcrumbHome: MenuItem = {
+    icon: 'pi pi-home',
+    label: 'Inicio',
+    command: () => this.router.navigate(['/dashboard'])
+  };
 
   // Subjects para debounce de auto-guardado
   private titleChange$ = new Subject<string>();
@@ -84,9 +96,12 @@ export class NoteEditor implements OnDestroy {
   ];
 
   constructor(
+    private route: ActivatedRoute,
+    public router: Router,
     private itemNoteService: ItemNoteService,
     private editorState: EditorStateService,
-    private noteService: NoteService
+    private noteService: NoteService,
+    private folderService: FolderService
   ) {
     // Configurar auto-guardado con debounce
     this.setupAutoSave();
@@ -128,6 +143,21 @@ export class NoteEditor implements OnDestroy {
     });
   }
 
+  ngOnInit(): void {
+    // Suscribirse a cambios en los parámetros de ruta
+    this.route.params
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(params => {
+        const folderId = parseInt(params['folderId'], 10);
+        const noteId = parseInt(params['noteId'], 10);
+
+        if (!isNaN(folderId) && !isNaN(noteId)) {
+          // Cargar la nota desde la URL
+          this.loadNoteFromRoute(folderId, noteId);
+        }
+      });
+  }
+
   ngOnDestroy(): void {
     // Limpiar todos los subjects de items
     this.itemChanges$.forEach(subject => {
@@ -137,6 +167,85 @@ export class NoteEditor implements OnDestroy {
     
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  /**
+   * Carga una nota basándose en los parámetros de la ruta
+   */
+  private loadNoteFromRoute(folderId: number, noteId: number): void {
+    this.error.set(null);
+    
+    // Cargar la nota
+    this.noteService.getNoteById(noteId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (note) => {
+          if (!note) {
+            this.error.set(`No se encontró la nota con ID ${noteId}`);
+            return;
+          }
+          
+          // Verificar que la nota pertenece a la carpeta correcta
+          if (note.folder_id !== folderId) {
+            this.error.set(`La nota ${noteId} no pertenece a la carpeta ${folderId}`);
+            return;
+          }
+          
+          // Cargar carpeta para obtener su nombre
+          this.folderService.getFolderById(folderId)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
+              next: (folder) => {
+                if (folder) {
+                  // Configurar breadcrumb
+                  this.breadcrumbItems.set([
+                    { 
+                      label: this.truncateText(folder.name, 20),
+                      command: () => this.router.navigate([folderId])
+                    },
+                    { label: this.truncateText(note.name, 30) }
+                  ]);
+                  
+                  // Establecer carpeta seleccionada
+                  this.editorState.setSelectedFolder({
+                    id: folderId,
+                    name: folder.name
+                  });
+                }
+              },
+              error: (error) => {
+                console.error('Error al cargar carpeta:', error);
+              }
+            });
+          
+          // Establecer nota seleccionada
+          this.editorState.setSelectedNote(note);
+          
+          // Actualizar read_at sin modificar updated_at
+          this.noteService.updateReadAt(noteId, note.updated_at)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
+              next: () => {
+                console.log('✅ read_at actualizado');
+              },
+              error: (error) => {
+                console.error('Error al actualizar read_at:', error);
+              }
+            });
+          
+          // Cargar la nota en el editor
+          this.loadNote(note);
+        },
+        error: (error) => {
+          console.error('Error al cargar nota desde ruta:', error);
+          this.error.set(`No se encontró la nota con ID ${noteId}`);
+        }
+      });
+  }
+
+  truncateText(text: string, maxLength: number): string {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
   }
 
   /**

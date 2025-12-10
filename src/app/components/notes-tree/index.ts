@@ -1,1 +1,1 @@
-export * from './notes-tree.component';
+export * from './notes-tree';

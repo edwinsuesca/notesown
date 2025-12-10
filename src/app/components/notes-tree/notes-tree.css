@@ -1,0 +1,103 @@
+.notes-tree-container {
+  width: 100%;
+}
+
+.tree-node-content {
+  display: flex;
+  /* background-color: var(--p-surface-700); */
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  cursor: pointer;
+  border-radius: 0.375rem;
+  transition: all 0.2s;
+}
+
+.tree-node-content:hover {
+  background-color: var(--p-surface-100);
+}
+
+:host-context(.app-dark) .tree-node-content:hover {
+  background-color: var(--p-surface-700);
+}
+
+.tree-node-content.selected {
+  background-color: var(--p-primary-100);
+  color: var(--p-primary-700);
+  font-weight: 600;
+}
+
+:host-context(.app-dark) .tree-node-content.selected {
+  background-color: var(--p-primary-900);
+  color: var(--p-primary-100);
+}
+
+.tree-node-content.selected i {
+  color: var(--p-primary-700);
+}
+
+:host-context(.app-dark) .tree-node-content.selected i {
+  color: var(--p-primary-100);
+}
+
+.tree-node-label {
+  flex: 1;
+  font-size: 0.875rem;
+}
+
+i {
+  font-size: 1rem;
+}
+
+.p-tree {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.p-tree .p-tree-container .p-treenode {
+  padding: 0.25rem 0;
+}
+
+.p-tree .p-tree-container .p-treenode .p-treenode-content {
+  padding: 0;
+  border: none;
+  background: transparent !important;
+}
+
+.p-tree .p-tree-container .p-treenode .p-treenode-content:focus {
+  box-shadow: none;
+}
+
+/* Ocultar el icono por defecto de PrimeNG */
+:host ::ng-deep .p-tree .p-tree-node-icon,
+.p-tree .p-tree-node-toggle-button {
+  display: none !important;
+}
+
+.p-tree span.p-tree-node-icon .p-tree button.p-tree-node-toggle-button {
+  display: none !important;
+}
+
+/* Estilos para carpetas */
+.tree-node-content .pi-folder,
+.tree-node-content .pi-folder-open {
+  color: var(--p-primary-color);
+  font-size: 1.1rem;
+}
+
+/* Estilos para notas */
+.tree-node-content .pi-file {
+  color: var(--text-color-secondary);
+  font-size: 0.9rem;
+}
+
+/* Indentación para notas dentro de carpetas */
+.p-tree .p-treenode-children {
+  padding-left: 1rem;
+}
+
+/* Label de las notas más pequeño */
+.p-tree .p-treenode-children .tree-node-label {
+  font-size: 0.9rem;
+}

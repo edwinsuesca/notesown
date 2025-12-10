@@ -1,5 +1,14 @@
 <div class="min-h-screen">
   <div class="max-w-4xl mx-auto">
+    <!-- Breadcrumb -->
+    <div class="mb-4">
+      <p-breadcrumb 
+        [model]="breadcrumbItems" 
+        [home]="breadcrumbHome"
+        styleClass="bg-transparent border-0 p-0">
+      </p-breadcrumb>
+    </div>
+
     <!-- Header -->
     <div class="mb-8">
       <h1 class="text-4xl font-bold text-surface-900 dark:text-surface-0 mb-2">Ajustes</h1>

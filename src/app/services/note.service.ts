@@ -221,4 +221,67 @@ export class NoteService {
       })
     );
   }
+
+  /**
+   * Obtiene las notas recientemente consultadas
+   * @param limit Número máximo de notas a retornar (por defecto 4)
+   * @returns Observable con las notas ordenadas por read_at descendente
+   */
+  getRecentlyReadNotes(limit: number = 4): Observable<Note[]> {
+    return from(
+      this.supabaseService.getClient()
+        .from('note')
+        .select('*')
+        .order('read_at', { ascending: false })
+        .limit(limit)
+    ).pipe(
+      map(response => {
+        if (response.error) {
+          throw response.error;
+        }
+        return response.data as Note[];
+      }),
+      catchError(error => {
+        console.error('Error al consultar notas recientes:', error);
+        throw error;
+      })
+    );
+  }
+
+  /**
+   * Actualiza el campo read_at de una nota sin modificar updated_at
+   * @param noteId ID de la nota
+   * @param currentUpdatedAt Valor actual de updated_at para preservarlo
+   * @returns Observable con la nota actualizada
+   */
+  updateReadAt(noteId: number, currentUpdatedAt?: string): Observable<Note> {
+    const updateData: any = {
+      read_at: new Date().toISOString()
+    };
+
+    // Si tenemos el updated_at actual, lo preservamos
+    if (currentUpdatedAt) {
+      updateData.updated_at = currentUpdatedAt;
+    }
+
+    return from(
+      this.supabaseService.getClient()
+        .from('note')
+        .update(updateData)
+        .eq('id', noteId)
+        .select()
+        .single()
+    ).pipe(
+      map(response => {
+        if (response.error) {
+          throw response.error;
+        }
+        return response.data as Note;
+      }),
+      catchError(error => {
+        console.error('Error al actualizar read_at:', error);
+        throw error;
+      })
+    );
+  }
 }
