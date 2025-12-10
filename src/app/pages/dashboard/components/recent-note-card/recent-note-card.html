@@ -1,0 +1,20 @@
+<p-card 
+  [header]="note.name"
+  styleClass="cursor-pointer hover:shadow-lg transition-shadow"
+  (click)="onNoteClick()">
+  <div class="text-surface-600 dark:text-surface-400 text-xs md:text-sm space-y-1">
+    <p>
+      <i class="pi pi-clock mr-1 text-xs"></i>
+      {{ formatRelativeTime(note.read_at) }}
+    </p>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button 
+      icon="pi pi-eye" 
+      label="Abrir"
+      [text]="true"
+      size="small"
+      (onClick)="onNoteClick(); $event.stopPropagation()">
+    </p-button>
+  </ng-template>
+</p-card>

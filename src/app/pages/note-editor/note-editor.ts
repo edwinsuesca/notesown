@@ -5,7 +5,10 @@ import { ChecklistCard, ChecklistItem } from '../../components/cards/checklist/c
 import { ButtonModule } from 'primeng/button';
 import { Menu, MenuModule } from 'primeng/menu';
 import { BreadcrumbModule } from 'primeng/breadcrumb';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { TooltipModule } from 'primeng/tooltip';
 import { MenuItem } from 'primeng/api';
+import { ConfirmationService } from 'primeng/api';
 import { MasonryGrid } from '../../components/masonry-grid/masonry-grid';
 import { TextCard } from '@/components/cards/text-card/text-card';
 import { ItemNoteService } from '@/services/item-note.service';
@@ -37,10 +40,13 @@ export interface ItemNote {
     ButtonModule,
     MenuModule,
     BreadcrumbModule,
+    ConfirmDialogModule,
+    TooltipModule,
     MasonryGrid,
     TextCard,
     ChecklistCard,
   ],
+  providers: [ConfirmationService],
   templateUrl: './note-editor.html',
   styleUrl: './note-editor.css',
 })
@@ -101,7 +107,8 @@ export class NoteEditor implements OnInit, OnDestroy {
     private itemNoteService: ItemNoteService,
     private editorState: EditorStateService,
     private noteService: NoteService,
-    private folderService: FolderService
+    private folderService: FolderService,
+    private confirmationService: ConfirmationService
   ) {
     // Configurar auto-guardado con debounce
     this.setupAutoSave();
@@ -648,5 +655,58 @@ export class NoteEditor implements OnInit, OnDestroy {
         // TODO: Mostrar mensaje de error al usuario
       }
     });
+  }
+
+  /**
+   * Muestra un diálogo de confirmación antes de eliminar la nota
+   */
+  confirmDeleteNote(): void {
+    const note = this.currentNote();
+    const folder = this.selectedFolder();
+    
+    if (!note || !folder) return;
+
+    const itemCount = this.cards().length;
+    const itemText = itemCount === 1 ? 'ítem' : 'ítems';
+
+    this.confirmationService.confirm({
+      message: `¿Estás seguro de que deseas eliminar la nota "${note.name}"?<br><br>Se eliminarán <strong>${itemCount} ${itemText}</strong> asociados.`,
+      header: 'Confirmar eliminación',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Eliminar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => {
+        this.deleteNote();
+      }
+    });
+  }
+
+  /**
+   * Elimina la nota actual
+   */
+  private deleteNote(): void {
+    const noteId = this.noteId();
+    const folderId = this.selectedFolder()?.id;
+    
+    if (!noteId || !folderId) return;
+
+    this.noteService.deleteNote(noteId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          console.log('✅ Nota eliminada');
+          
+          // Notificar al árbol de notas para que se actualice
+          this.editorState.notifyNoteCreated();
+          
+          // Navegar a la vista de carpeta
+          this.router.navigate([folderId]);
+        },
+        error: (error) => {
+          console.error('❌ Error al eliminar nota:', error);
+          // TODO: Mostrar mensaje de error al usuario
+        }
+      });
   }
 }

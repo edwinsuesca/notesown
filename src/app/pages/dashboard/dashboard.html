@@ -1,0 +1,105 @@
+<div class="min-h-screen">
+  <!-- Header -->
+  <div class="mb-4 md:mb-8">
+    <h1 class="text-xl md:text-2xl font-bold !text-primary-500 !m-0">
+      Dashboard
+    </h1>
+    <p class="text-sm md:text-base text-surface-600 dark:text-surface-400">
+      Bienvenido a tu espacio de notas
+    </p>
+  </div>
+
+  <!-- Notas Recientes -->
+  <div class="mb-6 md:mb-8">
+    <div class="flex items-center justify-between mb-3 md:mb-4">
+      <h2 class="text-xl md:text-2xl font-semibold text-surface-900 dark:text-surface-100">
+        Notas Recientes
+      </h2>
+    </div>
+
+    @if (loadingRecent()) {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        @for (i of [1,2,3,4]; track i) {
+          <p-card>
+            <p-skeleton width="100%" height="2rem" styleClass="mb-2"></p-skeleton>
+            <p-skeleton width="100%" height="1rem"></p-skeleton>
+          </p-card>
+        }
+      </div>
+    }
+
+    @if (!loadingRecent() && recentNotes().length > 0) {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        @for (note of recentNotes(); track note.id) {
+          <app-recent-note-card 
+            [note]="note"
+            (noteClick)="openNote($event)">
+          </app-recent-note-card>
+        }
+      </div>
+    }
+
+    @if (!loadingRecent() && recentNotes().length === 0) {
+      <div class="text-center py-8 md:py-12 bg-surface-50 dark:bg-surface-800 rounded-lg">
+        <i class="pi pi-file text-3xl md:text-4xl text-surface-400 mb-2 md:mb-3"></i>
+        <p class="text-sm md:text-base text-surface-600 dark:text-surface-400">
+          No hay notas recientes
+        </p>
+      </div>
+    }
+  </div>
+
+  <!-- Carpetas -->
+  <div>
+    <div class="flex items-center justify-between gap-2 mb-3 md:mb-4">
+      <h2 class="text-xl md:text-2xl font-semibold text-surface-900 dark:text-surface-100">
+        Todas las Carpetas
+      </h2>
+      <p-button
+        icon="pi pi-folder-plus"
+        [label]="'Nueva carpeta'"
+        class="hidden md:inline-flex"
+        (onClick)="createNewFolder()"
+        severity="primary">
+      </p-button>
+      <p-button
+        icon="pi pi-folder-plus"
+        class="md:hidden"
+        (onClick)="createNewFolder()"
+        severity="primary">
+      </p-button>
+    </div>
+
+    @if (loadingFolders()) {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+        @for (i of [1,2,3,4,5,6]; track i) {
+          <p-card>
+            <p-skeleton width="100%" height="2rem" styleClass="mb-2"></p-skeleton>
+            <p-skeleton width="60%" height="1rem" styleClass="mb-1"></p-skeleton>
+            <p-skeleton width="80%" height="1rem"></p-skeleton>
+          </p-card>
+        }
+      </div>
+    }
+
+    @if (!loadingFolders() && folders().length > 0) {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+        @for (folder of folders(); track folder.id) {
+          <app-folder-card 
+            [folder]="folder"
+            (folderClick)="openFolder($event)">
+          </app-folder-card>
+        }
+      </div>
+    }
+
+    @if (!loadingFolders() && folders().length === 0) {
+      <div class="text-center py-8 md:py-12 bg-surface-50 dark:bg-surface-800 rounded-lg">
+        <i class="pi pi-folder-open text-3xl md:text-4xl text-surface-400 mb-2 md:mb-3"></i>
+        <p class="text-sm md:text-base text-surface-600 dark:text-surface-400">
+          No hay carpetas creadas
+        </p>
+      </div>
+    }
+  </div>
+</div>

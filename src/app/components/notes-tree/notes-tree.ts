@@ -1,8 +1,8 @@
 import { Component, OnInit, OnDestroy, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { TreeModule } from 'primeng/tree';
-import { TreeNode } from 'primeng/api';
+import { ButtonModule } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip';
 import { Subject, takeUntil, forkJoin } from 'rxjs';
 import { FolderService } from '../../services/folder.service';
 import { NoteService } from '../../services/note.service';
@@ -10,10 +10,30 @@ import { Note } from '../../models/note.model';
 import { Folder } from '../../models/folder.model';
 import { EditorStateService } from '../../services/editor-state.service';
 
+// Interfaz personalizada para nodos del árbol
+interface TreeNode {
+  key: string;
+  label: string;
+  data: {
+    id: number;
+    type: 'folder' | 'note' | 'new-note-button';
+    folderId?: number;
+    createdAt?: string;
+    userId?: string;
+  };
+  icon: string;
+  expandedIcon?: string;
+  collapsedIcon?: string;
+  children?: TreeNode[];
+  leaf?: boolean;
+  expanded?: boolean;
+  styleClass?: string;
+}
+
 @Component({
   selector: 'app-notes-tree',
   standalone: true,
-  imports: [CommonModule, TreeModule],
+  imports: [CommonModule, ButtonModule, TooltipModule],
   templateUrl: './notes-tree.html',
   styleUrl: './notes-tree.css'
 })
@@ -101,6 +121,23 @@ export class NotesTreeComponent implements OnInit, OnDestroy {
     return folders.map(folder => {
       const folderNotes = notesByFolder.get(folder.id) || [];
       
+      // Convertir notas a TreeNodes
+      const noteNodes = this.convertNotesToTreeNodes(folderNotes);
+      
+      // Agregar nodo especial de "nueva nota" al final
+      const newNoteNode: TreeNode = {
+        key: `new-note-${folder.id}`,
+        label: 'Nueva nota',
+        data: {
+          id: folder.id,
+          type: 'new-note-button',
+          folderId: folder.id
+        },
+        icon: 'pi pi-plus',
+        leaf: true,
+        styleClass: 'new-note-node'
+      };
+      
       return {
         key: `folder-${folder.id}`,
         label: folder.name,
@@ -112,8 +149,8 @@ export class NotesTreeComponent implements OnInit, OnDestroy {
         icon: 'pi pi-folder',
         expandedIcon: 'pi pi-folder-open',
         collapsedIcon: 'pi pi-folder',
-        children: this.convertNotesToTreeNodes(folderNotes),
-        leaf: folderNotes.length === 0
+        children: [...noteNodes, newNoteNode],
+        leaf: false
       };
     });
   }
@@ -157,6 +194,9 @@ export class NotesTreeComponent implements OnInit, OnDestroy {
         // Navegar a la nota
         this.router.navigate([folderId, noteId]);
       }
+    } else if (node.data.type === 'new-note-button' && node.data.folderId) {
+      // Crear nueva nota en la carpeta
+      this.createNoteInFolder(node.data.folderId, event);
     }
   }
 
@@ -167,10 +207,12 @@ export class NotesTreeComponent implements OnInit, OnDestroy {
     if (node.data.type === 'folder') {
       // Una carpeta está seleccionada si:
       // 1. Es la carpeta actual Y no hay nota seleccionada
-      // 2. O contiene la nota seleccionada
+      // 2. O contiene la nota seleccionada (verificando solo nodos de tipo 'note')
       const isFolderSelected = this.selectedFolderId() === node.data.id && !this.selectedNoteId();
       const containsSelectedNote = this.selectedNoteId() !== null && 
-                                   node.children?.some(child => child.data.id === this.selectedNoteId());
+                                   node.children?.some(child => 
+                                     child.data.type === 'note' && child.data.id === this.selectedNoteId()
+                                   );
       return isFolderSelected || !!containsSelectedNote;
     } else if (node.data.type === 'note') {
       return this.selectedNoteId() === node.data.id;
@@ -267,6 +309,54 @@ export class NotesTreeComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error('Error al refrescar el árbol:', error);
+        }
+      });
+  }
+
+  /**
+   * Crea una nueva carpeta
+   */
+  createNewFolder(): void {
+    this.folderService.createFolder({ name: 'Nueva Carpeta' })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (newFolder) => {
+          // Refrescar el árbol
+          this.refresh();
+          
+          // Navegar a la nueva carpeta
+          this.router.navigate([newFolder.id]);
+        },
+        error: (error) => {
+          console.error('Error al crear carpeta:', error);
+        }
+      });
+  }
+
+  /**
+   * Crea una nueva nota en una carpeta específica
+   */
+  createNoteInFolder(folderId: number, event: Event): void {
+    event.stopPropagation();
+    
+    this.noteService.createNote({
+      name: 'Nueva Nota',
+      folder_id: folderId
+    })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (newNote) => {
+          // Establecer la nota como seleccionada
+          this.editorState.setSelectedNote(newNote);
+          
+          // Refrescar el árbol
+          this.editorState.notifyNoteCreated();
+          
+          // Navegar a la nueva nota
+          this.router.navigate([folderId, newNote.id]);
+        },
+        error: (error) => {
+          console.error('Error al crear nota:', error);
         }
       });
   }

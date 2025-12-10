@@ -32,7 +32,7 @@
       <p-breadcrumb 
         [model]="breadcrumbItems()" 
         [home]="breadcrumbHome"
-        styleClass="bg-transparent border-0 p-0">
+        styleClass="!bg-transparent border-0 p-0">
       </p-breadcrumb>
     </div>
   }
@@ -40,12 +40,22 @@
   <!-- Título -->
   @if (currentNote() && !error()) {
     <div class="mb-8">
-      <h1 
-        contenteditable="true"
-        (blur)="noteTitle.set($any($event.target).textContent || 'Mi Nota')"
-        class="text-3xl font-bold text-surface-900 dark:text-surface-100 outline-none focus:ring-2 focus:ring-primary rounded px-2 -mx-2 transition-all cursor-text"
-        [textContent]="noteTitle()">
-      </h1>
+      <div class="flex items-center justify-between gap-3">
+        <h1 
+          contenteditable="true"
+          (blur)="noteTitle.set($any($event.target).textContent || 'Mi Nota')"
+          class="text-3xl font-bold text-surface-900 dark:text-surface-100 outline-none focus:ring-2 focus:ring-primary rounded px-2 -mx-2 transition-all cursor-text flex-1"
+          [textContent]="noteTitle()">
+        </h1>
+        <p-button
+          icon="pi pi-trash"
+          severity="danger"
+          [outlined]="true"
+          (onClick)="confirmDeleteNote()"
+          pTooltip="Eliminar nota"
+          tooltipPosition="left">
+        </p-button>
+      </div>
     </div>
   }
 
@@ -104,4 +114,7 @@
     <!-- Menú popup -->
     <p-menu #menu [model]="menuItems" [popup]="true"></p-menu>
   }
+
+  <!-- Diálogo de confirmación -->
+  <p-confirmDialog></p-confirmDialog>
 </div>

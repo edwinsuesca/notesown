@@ -16,7 +16,7 @@
         <span class="text-xs text-muted-color">{{ currentUser.user_metadata['full_name'] || 'Usuario' }}</span>
       </div>
       <p-avatar [label]="getInitials(currentUser.email || '')"
-        styleClass="bg-primary text-primary-contrast cursor-pointer" shape="circle" (click)="menu.toggle($event)">
+        class="bg-primary text-primary-contrast cursor-pointer" shape="circle" (click)="menu.toggle($event)">
       </p-avatar>
       <p-menu #menu [model]="userMenuItems" [popup]="true" styleClass="w-48"></p-menu>
     </div>

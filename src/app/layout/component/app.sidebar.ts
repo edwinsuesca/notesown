@@ -19,16 +19,6 @@ import { NoteService } from '../../services/note.service';
       <div class="flex-1 overflow-y-auto">
         <app-notes-tree></app-notes-tree>
       </div>
-
-      <!-- Botón de nueva nota -->
-      <p-button
-        icon="pi pi-plus"
-        (onClick)="createNewNote()"
-        [disabled]="!isCreateNoteEnabled()"
-        [pTooltip]="isCreateNoteEnabled() ? 'Nueva nota' : 'Selecciona una carpeta primero'"
-        label="Nueva nota"
-        styleClass="w-full mb-4"
-        tooltipPosition="top"/>
       
       <!-- Menú de navegación -->
       <app-menu></app-menu>

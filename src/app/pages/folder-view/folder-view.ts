@@ -28,7 +28,7 @@ import { Folder } from '../../models/folder.model';
           <p-breadcrumb 
             [model]="breadcrumbItems()" 
             [home]="breadcrumbHome"
-            styleClass="bg-transparent border-0 p-0">
+            styleClass="!bg-transparent border-0 p-0">
           </p-breadcrumb>
         </div>
       }
@@ -38,13 +38,17 @@ import { Folder } from '../../models/folder.model';
         <div class="mb-6">
           <div class="flex items-center justify-between mb-2">
             <div class="flex items-center gap-3 flex-1">
-              <i class="pi pi-folder text-4xl text-primary"></i>
+              <i class="pi pi-folder !text-3xl text-primary"></i>
               <h1 
                 contenteditable="true"
                 (blur)="updateFolderName($any($event.target).textContent || folder()?.name || '')"
-                class="text-4xl font-bold text-surface-900 dark:text-surface-100 outline-none focus:ring-2 focus:ring-primary rounded px-2 -mx-2 transition-all cursor-text"
+                class="!text-3xl font-bold text-surface-900 dark:text-surface-100 outline-none focus:ring-2 focus:ring-primary rounded px-2 !m-0 transition-all cursor-text"
                 [textContent]="folder()?.name">
               </h1>
+
+              <span class="!text-surface-600 dark:text-surface-400">
+                ({{ notes().length }} {{ notes().length === 1 ? 'nota' : 'notas' }})
+              </span>
             </div>
             <p-button
               icon="pi pi-trash"
@@ -55,9 +59,6 @@ import { Folder } from '../../models/folder.model';
               tooltipPosition="left">
             </p-button>
           </div>
-          <p class="text-surface-600 dark:text-surface-400">
-            {{ notes().length }} {{ notes().length === 1 ? 'nota' : 'notas' }}
-          </p>
         </div>
       }
 
@@ -121,8 +122,8 @@ import { Folder } from '../../models/folder.model';
       <!-- Empty State -->
       @if (!loading() && notes().length === 0 && folder()) {
         <div class="flex flex-col items-center justify-center py-20 text-center">
-          <i class="pi pi-folder-open text-6xl text-surface-300 dark:text-surface-600 mb-4"></i>
-          <h2 class="text-2xl font-semibold text-surface-700 dark:text-surface-300 mb-2">
+          <i class="pi pi-folder-open !text-6xl text-surface-300 dark:text-surface-600 mb-4"></i>
+          <h2 class="!text-xl font-semibold text-surface-700 dark:text-surface-300 mb-2">
             No hay notas en {{ folder()?.name }}
           </h2>
           <p class="text-surface-500 dark:text-surface-400 mb-6">

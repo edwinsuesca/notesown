@@ -3,6 +3,37 @@
 @use './layout/layout.scss';
 @use 'primeicons/primeicons.css';
 
+/* Fix para iconos que desaparecen en Brave al cambiar tamaño */
+i[class^="pi-"],
+i[class*=" pi-"],
+.pi {
+    /* Forzar aceleración de hardware */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    
+    /* Prevenir anti-aliasing issues */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    
+    /* Forzar repaint */
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    
+    /* Asegurar que el icono mantenga su posición */
+    will-change: auto;
+    
+    /* Prevenir que el navegador optimice demasiado */
+    text-rendering: optimizeLegibility;
+}
+
+/* Fix adicional para botones de PrimeNG */
+p-button i,
+.p-button i,
+button i {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+}
+
 li.menu-separator {
     height: 1px !important;
     display: block !important;
