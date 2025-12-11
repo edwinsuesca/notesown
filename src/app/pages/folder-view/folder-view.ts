@@ -42,7 +42,7 @@ import { Folder } from '../../models/folder.model';
               <h1 
                 contenteditable="true"
                 (blur)="updateFolderName($any($event.target).textContent || folder()?.name || '')"
-                class="!text-3xl font-bold text-surface-900 dark:text-surface-100 outline-none focus:ring-2 focus:ring-primary rounded px-2 !m-0 transition-all cursor-text"
+                class="!md:text-xl text-2xl font-bold text-surface-900 dark:text-surface-100 outline-none focus:ring-2 focus:ring-primary rounded px-2 !m-0 transition-all cursor-text"
                 [textContent]="folder()?.name">
               </h1>
 
@@ -123,7 +123,7 @@ import { Folder } from '../../models/folder.model';
       @if (!loading() && notes().length === 0 && folder()) {
         <div class="flex flex-col items-center justify-center py-20 text-center">
           <i class="pi pi-folder-open !text-6xl text-surface-300 dark:text-surface-600 mb-4"></i>
-          <h2 class="!text-xl font-semibold text-surface-700 dark:text-surface-300 mb-2">
+          <h2 class="text-xl font-semibold text-surface-700 dark:text-surface-300 mb-2">
             No hay notas en {{ folder()?.name }}
           </h2>
           <p class="text-surface-500 dark:text-surface-400 mb-6">

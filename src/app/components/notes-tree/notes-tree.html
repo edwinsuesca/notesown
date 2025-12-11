@@ -1,16 +1,23 @@
 <div class="notes-tree-container">
-  <div class="flex items-center justify-between mb-3 px-2">
-    <h2 class="text-lg font-semibold m-0">Notas</h2>
-    <p-button
-      icon="pi pi-folder-plus"
-      [text]="true"
-      [rounded]="true"
-      size="large"
-      (onClick)="createNewFolder()"
-      pTooltip="Nueva carpeta"
-      tooltipPosition="bottom">
-    </p-button>
-  </div>
+  <header class="flex items-center justify-between mb-3 px-2 sticky top-0 bg-surface-0 dark:bg-surface-900 z-10 py-2">
+    <h2 class="text-xl font-semibold !m-0">Notas</h2>
+    <div class="flex items-center gap-0">
+      <p-button
+        [icon]="allExpanded ? 'pi pi-angle-double-up' : 'pi pi-angle-double-down'"
+        [text]="true"
+        (onClick)="toggleExpandAll()"
+        [pTooltip]="allExpanded ? 'Colapsar todo' : 'Expandir todo'"
+        tooltipPosition="bottom">
+      </p-button>
+      <p-button
+        icon="pi pi-folder-plus"
+        [text]="true"
+        (onClick)="showCreateFolderDialog()"
+        pTooltip="Nueva carpeta"
+        tooltipPosition="bottom">
+      </p-button>
+    </div>
+  </header>
 
   <!-- Árbol personalizado -->
   <div class="custom-tree">
@@ -40,6 +47,26 @@
               (click)="onNodeClick(folderNode, $event)">
               <i [class]="getNodeIcon(folderNode)"></i>
               <span class="tree-node-label">{{ folderNode.label }} ({{folderCount}})</span>
+              
+              <!-- Botones de acción para carpeta -->
+              <div class="node-actions">
+                <p-button
+                  icon="pi pi-eye"
+                  [text]="true"
+                  [rounded]="true"
+                  size="small"
+                  (onClick)="viewFolder(folderNode.data.id, $event)"
+                  styleClass="action-button">
+                </p-button>
+                <p-button
+                  icon="pi pi-ellipsis-v"
+                  [text]="true"
+                  [rounded]="true"
+                  size="small"
+                  (onClick)="openContextMenu(folderNode, $event, cm)"
+                  styleClass="action-button">
+                </p-button>
+              </div>
             </div>
 
             <!-- Hijos de la carpeta (notas) -->
@@ -53,6 +80,20 @@
                     (click)="onNodeClick(childNode, $event)">
                     <i [class]="childNode.icon"></i>
                     <span class="tree-node-label">{{ childNode.label }}</span>
+                    
+                    <!-- Botón de menú para notas (no para el botón de nueva nota) -->
+                    @if (childNode.data.type === 'note') {
+                      <div class="node-actions">
+                        <p-button
+                          icon="pi pi-ellipsis-v"
+                          [text]="true"
+                          [rounded]="true"
+                          size="small"
+                          (onClick)="openContextMenu(childNode, $event, cm)"
+                          styleClass="action-button">
+                        </p-button>
+                      </div>
+                    }
                   </div>
                 }
               </div>
@@ -62,4 +103,61 @@
       </div>
     }
   </div>
+
+  <!-- Menú contextual -->
+  <p-contextMenu #cm [model]="contextMenuItems" appendTo="body"></p-contextMenu>
+
+  <!-- Diálogo de renombrar -->
+  <p-dialog 
+    [header]="nodeToRename?.data?.type === 'folder' ? 'Renombrar carpeta' : 'Renombrar nota'" 
+    [modal]="true"
+    [draggable]="false"
+    [dismissableMask]="false"
+    appendTo="body"
+    [(visible)]="renameDialogVisible" 
+    [style]="{ width: '25rem' }">
+    <div class="flex items-center gap-4 mb-8">
+      <label for="rename-input" class="font-semibold w-24">Nombre</label>
+      <input 
+        pInputText 
+        id="rename-input" 
+        class="flex-auto" 
+        [(ngModel)]="renameValue"
+        (keyup.enter)="saveRename()"
+        autocomplete="off" />
+    </div>
+    <div class="flex justify-end gap-2">
+      <p-button label="Cancelar" severity="secondary" (onClick)="cancelRename()" />
+      <p-button label="Guardar" (onClick)="saveRename()" />
+    </div>
+  </p-dialog>
+
+  <!-- Diálogo de confirmación -->
+  <p-confirmDialog appendTo="body"></p-confirmDialog>
+
+  <!-- Diálogo de crear carpeta -->
+  <p-dialog 
+    header="Nueva carpeta" 
+    [modal]="true"
+    [draggable]="false"
+    [dismissableMask]="false"
+    appendTo="body"
+    [(visible)]="createFolderDialogVisible" 
+    [style]="{ width: '25rem' }">
+    <div class="flex items-center gap-4 mb-8">
+      <label for="folder-name-input" class="font-semibold w-24">Nombre</label>
+      <input 
+        pInputText 
+        id="folder-name-input" 
+        class="flex-auto" 
+        [(ngModel)]="newFolderName"
+        (keyup.enter)="createNewFolder()"
+        placeholder="Nombre de la carpeta"
+        autocomplete="off" />
+    </div>
+    <div class="flex justify-end gap-2">
+      <p-button label="Cancelar" severity="secondary" (onClick)="cancelCreateFolder()" />
+      <p-button label="Crear" (onClick)="createNewFolder()" />
+    </div>
+  </p-dialog>
 </div>

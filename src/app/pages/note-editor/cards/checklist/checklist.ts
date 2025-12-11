@@ -1,8 +1,10 @@
-import { Component, input, output } from '@angular/core';
+import { Component, inject, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ButtonModule } from 'primeng/button';
+import { ConfirmPopupModule } from 'primeng/confirmpopup';
+import { ConfirmationService } from 'primeng/api';
 
 export interface ChecklistItem {
   id: string;
@@ -13,7 +15,8 @@ export interface ChecklistItem {
 @Component({
   selector: 'app-checklist-card',
   standalone: true,
-  imports: [CommonModule, FormsModule, CheckboxModule, ButtonModule],
+  imports: [CommonModule, FormsModule, CheckboxModule, ButtonModule, ConfirmPopupModule],
+  providers: [ConfirmationService],
   templateUrl: './checklist.html',
   styleUrl: './checklist.css',
 })
@@ -23,6 +26,7 @@ export class ChecklistCard {
   items = input<ChecklistItem[]>([]);
   itemsChange = output<ChecklistItem[]>();
   remove = output<void>();
+  confirmationService = inject(ConfirmationService)
 
   onTitleChange(value: string) {
     this.titleChange.emit(value || 'Nueva tarjeta');
@@ -79,5 +83,20 @@ export class ChecklistCard {
         nextInput?.focus();
       }
     }
+  }
+
+  confirmRemove(event: Event) {
+    this.confirmationService.confirm({
+      target: event.target as EventTarget,
+      message: '¿Eliminar esta tarjeta?',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Eliminar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger p-button-sm',
+      rejectButtonStyleClass: 'p-button-sm',
+      accept: () => {
+        this.remove.emit();
+      }
+    });
   }
 }

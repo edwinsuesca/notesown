@@ -1,11 +1,14 @@
 import { Component, computed, effect, ElementRef, input, output, signal, viewChild } from '@angular/core';
 import { Button } from 'primeng/button';
+import { ConfirmPopupModule } from 'primeng/confirmpopup';
+import { ConfirmationService } from 'primeng/api';
 import { TextType } from '@/pages/note-editor/note-editor';
 
 @Component({
   selector: 'app-text-card',
   standalone: true,
-  imports: [Button],
+  imports: [Button, ConfirmPopupModule],
+  providers: [ConfirmationService],
   templateUrl: './text-card.html',
   styleUrl: './text-card.scss'
 })
@@ -19,7 +22,7 @@ export class TextCard {
   textareaRef = viewChild<ElementRef<HTMLTextAreaElement>>('textareaRef');
   isEditing = signal<boolean>(false);
 
-  constructor() {
+  constructor(private confirmationService: ConfirmationService) {
     // Ajustar altura cuando cambia el contenido desde el input
     effect(() => {
       const content = this.content();
@@ -87,5 +90,20 @@ export class TextCard {
 
   stopEditing() {
     this.isEditing.set(false);
+  }
+
+  confirmRemove(event: Event) {
+    this.confirmationService.confirm({
+      target: event.target as EventTarget,
+      message: '¿Eliminar esta tarjeta?',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Eliminar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger p-button-sm',
+      rejectButtonStyleClass: 'p-button-sm',
+      accept: () => {
+        this.remove.emit();
+      }
+    });
   }
 }

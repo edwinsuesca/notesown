@@ -39,3 +39,10 @@ li.menu-separator {
     display: block !important;
     background-color: var(--surface-border) !important;
 }
+
+/* Botones siempre visibles en dispositivos táctiles */
+@media (hover: none) and (pointer: coarse) {
+  .touch-device-visible {
+    opacity: 1 !important;
+  }
+}

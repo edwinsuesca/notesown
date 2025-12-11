@@ -79,6 +79,12 @@ export class AppLayout implements OnInit {
         const topbarEl = document.querySelector('.layout-menu-button');
         const eventTarget = event.target as Node;
 
+        // Verificar si el clic es en un diálogo o menú contextual de PrimeNG
+        const dialogEl = (eventTarget as HTMLElement).closest('.p-dialog, .p-contextmenu');
+        if (dialogEl) {
+            return false;
+        }
+
         return !(sidebarEl?.isSameNode(eventTarget) || sidebarEl?.contains(eventTarget) || topbarEl?.isSameNode(eventTarget) || topbarEl?.contains(eventTarget));
     }
 

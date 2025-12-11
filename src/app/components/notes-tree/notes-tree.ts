@@ -3,6 +3,13 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
+import { ContextMenuModule } from 'primeng/contextmenu';
+import { DialogModule } from 'primeng/dialog';
+import { InputTextModule } from 'primeng/inputtext';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { MenuItem } from 'primeng/api';
+import { ConfirmationService } from 'primeng/api';
+import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil, forkJoin } from 'rxjs';
 import { FolderService } from '../../services/folder.service';
 import { NoteService } from '../../services/note.service';
@@ -33,7 +40,8 @@ interface TreeNode {
 @Component({
   selector: 'app-notes-tree',
   standalone: true,
-  imports: [CommonModule, ButtonModule, TooltipModule],
+  imports: [CommonModule, ButtonModule, TooltipModule, ContextMenuModule, DialogModule, InputTextModule, FormsModule, ConfirmDialogModule],
+  providers: [ConfirmationService],
   templateUrl: './notes-tree.html',
   styleUrl: './notes-tree.css'
 })
@@ -43,12 +51,29 @@ export class NotesTreeComponent implements OnInit, OnDestroy {
   selectedFolderId = signal<number | null>(null);
   selectedNoteId = signal<number | null>(null);
   private destroy$ = new Subject<void>();
+  
+  // Menú contextual
+  contextMenuItems: MenuItem[] = [];
+  currentContextNode: TreeNode | null = null;
+  
+  // Diálogo de renombrar
+  renameDialogVisible = false;
+  renameValue = '';
+  nodeToRename: TreeNode | null = null;
+  
+  // Diálogo de crear carpeta
+  createFolderDialogVisible = false;
+  newFolderName = '';
+  
+  // Estado de expansión
+  allExpanded = false;
 
   constructor(
     private router: Router,
     private folderService: FolderService,
     private noteService: NoteService,
-    private editorState: EditorStateService
+    private editorState: EditorStateService,
+    private confirmationService: ConfirmationService
   ) {
     // Effect para sincronizar con el estado global
     effect(() => {
@@ -313,10 +338,23 @@ export class NotesTreeComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Crea una nueva carpeta
+   * Muestra el diálogo para crear una nueva carpeta
+   */
+  showCreateFolderDialog(): void {
+    this.newFolderName = '';
+    this.createFolderDialogVisible = true;
+  }
+
+  /**
+   * Crea una nueva carpeta con el nombre ingresado
    */
   createNewFolder(): void {
-    this.folderService.createFolder({ name: 'Nueva Carpeta' })
+    if (!this.newFolderName.trim()) {
+      this.createFolderDialogVisible = false;
+      return;
+    }
+
+    this.folderService.createFolder({ name: this.newFolderName.trim() })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (newFolder) => {
@@ -325,11 +363,33 @@ export class NotesTreeComponent implements OnInit, OnDestroy {
           
           // Navegar a la nueva carpeta
           this.router.navigate([newFolder.id]);
+          
+          // Cerrar el diálogo
+          this.createFolderDialogVisible = false;
         },
         error: (error) => {
           console.error('Error al crear carpeta:', error);
+          this.createFolderDialogVisible = false;
         }
       });
+  }
+
+  /**
+   * Cancela la creación de carpeta
+   */
+  cancelCreateFolder(): void {
+    this.createFolderDialogVisible = false;
+    this.newFolderName = '';
+  }
+
+  /**
+   * Alterna entre expandir y colapsar todas las carpetas
+   */
+  toggleExpandAll(): void {
+    this.allExpanded = !this.allExpanded;
+    this.treeNodes.forEach(node => {
+      node.expanded = this.allExpanded;
+    });
   }
 
   /**
@@ -358,5 +418,188 @@ export class NotesTreeComponent implements OnInit, OnDestroy {
           console.error('Error al crear nota:', error);
         }
       });
+  }
+
+  /**
+   * Navega a la vista de carpeta
+   */
+  viewFolder(folderId: number, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.router.navigate([folderId]);
+  }
+
+  /**
+   * Abre el menú contextual para un nodo
+   */
+  openContextMenu(node: TreeNode, event: Event, contextMenu: any): void {
+    event.stopPropagation();
+    this.currentContextNode = node;
+    
+    // Configurar items del menú según el tipo de nodo
+    if (node.data.type === 'folder') {
+      this.contextMenuItems = [
+        {
+          label: 'Ver',
+          icon: 'pi pi-eye',
+          command: () => this.viewFolder(node.data.id)
+        },
+        {
+          label: 'Renombrar',
+          icon: 'pi pi-pencil',
+          command: () => this.renameNode(node)
+        },
+        {
+          label: 'Eliminar',
+          icon: 'pi pi-trash',
+          command: () => this.deleteNode(node),
+          styleClass: 'text-red-500'
+        }
+      ];
+    } else if (node.data.type === 'note') {
+      const parentFolder = this.findParentFolder(node);
+      const folderId = parentFolder?.data.id;
+      
+      this.contextMenuItems = [
+        {
+          label: 'Ver',
+          icon: 'pi pi-eye',
+          command: () => {
+            if (folderId) {
+              this.router.navigate([folderId, node.data.id]);
+            }
+          }
+        },
+        {
+          label: 'Renombrar',
+          icon: 'pi pi-pencil',
+          command: () => this.renameNode(node)
+        },
+        {
+          label: 'Eliminar',
+          icon: 'pi pi-trash',
+          command: () => this.deleteNode(node),
+          styleClass: 'text-red-500'
+        }
+      ];
+    }
+    
+    contextMenu.show(event);
+  }
+
+  /**
+   * Abre el diálogo para renombrar un nodo (carpeta o nota)
+   */
+  renameNode(node: TreeNode): void {
+    this.nodeToRename = node;
+    this.renameValue = node.label;
+    this.renameDialogVisible = true;
+  }
+
+  /**
+   * Guarda el nuevo nombre del nodo
+   */
+  saveRename(): void {
+    if (!this.nodeToRename || !this.renameValue.trim() || this.renameValue === this.nodeToRename.label) {
+      this.renameDialogVisible = false;
+      return;
+    }
+
+    const node = this.nodeToRename;
+    const newName = this.renameValue.trim();
+
+    if (node.data.type === 'folder') {
+      this.folderService.updateFolder(node.data.id, { name: newName })
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            this.refresh();
+            this.renameDialogVisible = false;
+          },
+          error: (error) => {
+            console.error('Error al renombrar carpeta:', error);
+            this.renameDialogVisible = false;
+          }
+        });
+    } else if (node.data.type === 'note') {
+      this.noteService.updateNote(node.data.id, { name: newName })
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            this.refresh();
+            this.renameDialogVisible = false;
+          },
+          error: (error) => {
+            console.error('Error al renombrar nota:', error);
+            this.renameDialogVisible = false;
+          }
+        });
+    }
+  }
+
+  /**
+   * Cancela el renombrado
+   */
+  cancelRename(): void {
+    this.renameDialogVisible = false;
+    this.nodeToRename = null;
+    this.renameValue = '';
+  }
+
+  /**
+   * Elimina un nodo (carpeta o nota)
+   */
+  deleteNode(node: TreeNode): void {
+    const isFolder = node.data.type === 'folder';
+    const header = isFolder ? 'Eliminar carpeta' : 'Eliminar nota';
+    const message = isFolder
+      ? `¿Estás seguro de eliminar la carpeta "${node.label}" y todas sus notas?`
+      : `¿Estás seguro de eliminar la nota "${node.label}"?`;
+
+    this.confirmationService.confirm({
+      header: header,
+      message: message,
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Eliminar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => {
+        if (node.data.type === 'folder') {
+          this.folderService.deleteFolder(node.data.id)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
+              next: () => {
+                this.refresh();
+                // Si la carpeta eliminada estaba seleccionada, navegar a home
+                if (this.selectedFolderId() === node.data.id) {
+                  this.router.navigate(['/']);
+                }
+              },
+              error: (error) => {
+                console.error('Error al eliminar carpeta:', error);
+              }
+            });
+        } else if (node.data.type === 'note') {
+          this.noteService.deleteNote(node.data.id)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
+              next: () => {
+                this.refresh();
+                // Si la nota eliminada estaba seleccionada, navegar a la carpeta
+                if (this.selectedNoteId() === node.data.id) {
+                  const parentFolder = this.findParentFolder(node);
+                  if (parentFolder) {
+                    this.router.navigate([parentFolder.data.id]);
+                  }
+                }
+              },
+              error: (error) => {
+                console.error('Error al eliminar nota:', error);
+              }
+            });
+        }
+      }
+    });
   }
 }

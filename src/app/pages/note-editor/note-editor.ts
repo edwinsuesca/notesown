@@ -1,7 +1,7 @@
 import { Component, effect, signal, ViewChild, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ChecklistCard, ChecklistItem } from '../../components/cards/checklist/checklist';
+import { ChecklistCard, ChecklistItem } from './cards/checklist/checklist';
 import { ButtonModule } from 'primeng/button';
 import { Menu, MenuModule } from 'primeng/menu';
 import { BreadcrumbModule } from 'primeng/breadcrumb';
@@ -10,7 +10,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { MenuItem } from 'primeng/api';
 import { ConfirmationService } from 'primeng/api';
 import { MasonryGrid } from '../../components/masonry-grid/masonry-grid';
-import { TextCard } from '@/components/cards/text-card/text-card';
+import { TextCard } from '@/pages/note-editor/cards/text-card/text-card';
 import { ItemNoteService } from '@/services/item-note.service';
 import { CreateItemNoteDto, UpdateItemNoteDto } from '@/models/item-note.model';
 import { EditorStateService } from '@/services/editor-state.service';
@@ -298,6 +298,7 @@ export class NoteEditor implements OnInit, OnDestroy {
       items: type === 'checklist' ? [{ id: crypto.randomUUID(), text: '', checked: false }] : undefined,
       textType: type === 'paragraph' || type === 'highlight' || type === 'link' ? type : undefined
     };
+    alert('prueba');
     
     this.cards.update(cards => [...cards, newCard]);
     

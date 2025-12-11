@@ -28,6 +28,7 @@
   border-radius: 0.375rem;
   transition: all 0.2s;
   user-select: none;
+  position: relative;
 }
 
 .tree-node-content:hover {
@@ -120,4 +121,41 @@ i {
 
 .tree-node-content.new-note-node .tree-node-label {
   font-size: 0.85rem;
+}
+
+/* Contenedor de botones de acción */
+.node-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: auto;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.tree-node-content:hover .node-actions {
+  opacity: 1;
+}
+
+/* Botones de acción siempre visibles en nodos seleccionados */
+.tree-node-content.selected .node-actions {
+  opacity: 1;
+}
+
+/* En dispositivos táctiles, los botones siempre visibles */
+@media (hover: none) and (pointer: coarse) {
+  .node-actions {
+    opacity: 1;
+  }
+}
+
+/* Estilos para los botones de acción */
+::ng-deep .action-button {
+  width: 1.75rem !important;
+  height: 1.75rem !important;
+  padding: 0 !important;
+}
+
+::ng-deep .action-button .p-button-icon {
+  font-size: 0.875rem !important;
 }

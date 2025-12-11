@@ -26,11 +26,11 @@ import { AuthService } from '../../services/auth.service';
               </div>
 
               <div>
-                  <label for="email1" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">Correo electrónico</label>
-                  <input pInputText id="email1" type="text" placeholder="Correo electrónico" class="w-full md:w-120 mb-8" [(ngModel)]="email" />
+                  <label for="email" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">Correo electrónico</label>
+                  <input pInputText id="email" type="email" placeholder="Correo electrónico" class="w-full md:w-120 mb-8" [(ngModel)]="email" />
 
-                  <label for="password1" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">Contraseña</label>
-                  <p-password id="password1" [(ngModel)]="password" placeholder="Contraseña" [toggleMask]="true" styleClass="mb-4" [fluid]="true" [feedback]="false"></p-password>
+                  <label for="password" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">Contraseña</label>
+                  <p-password id="password" [(ngModel)]="password" placeholder="Contraseña" [toggleMask]="true" class="mb-4" [fluid]="true" [feedback]="false"></p-password>
 
                   <p-message *ngIf="errorMessage" severity="error" [text]="errorMessage" styleClass="mb-4 w-full"></p-message>
                   
