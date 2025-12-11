@@ -1,22 +1,34 @@
 import { inject } from '@angular/core';
-import { Router, CanActivateFn } from '@angular/router';
+import { Router, CanActivateFn, UrlTree } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
-export const authGuard: CanActivateFn = async (route, state) => {
+export const authGuard: CanActivateFn = async (route, state): Promise<boolean | UrlTree> => {
+  // Evitar bucle: Si ya estamos en /auth, permitir acceso
+  if (state.url.startsWith('/auth')) {
+    return true;
+  }
+  
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  // Esperar a que la sesión se inicialice completamente
-  await authService.waitForInitialization();
+  try {
+    // Esperar inicialización con timeout
+    await Promise.race([
+      authService.waitForInitialization(),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout')), 3000)
+      )
+    ]);
+  } catch (error) {
+    // Timeout en inicialización
+  }
 
-  // Verificar si el usuario está autenticado
   if (authService.isAuthenticated()) {
     return true;
   } else {
-    // Redirigir al login si no está autenticado
-    router.navigate(['/auth/login'], { 
-      queryParams: { returnUrl: state.url } 
+    // Retornar UrlTree para que Angular maneje la navegación
+    return router.createUrlTree(['/auth/login'], {
+      queryParams: { returnUrl: state.url }
     });
-    return false;
   }
 };

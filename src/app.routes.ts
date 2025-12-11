@@ -4,6 +4,11 @@ import { Notfound } from './app/pages/notfound/notfound';
 import { authGuard } from './app/guards/auth.guard';
 
 export const appRoutes: Routes = [
+    // Rutas de autenticación PRIMERO (sin layout)
+    { path: 'auth', loadChildren: () => import('./app/pages/auth/auth.routes') },
+    { path: 'notfound', component: Notfound },
+    
+    // Rutas con layout (protegidas)
     {
         path: '',
         component: AppLayout,
@@ -16,7 +21,7 @@ export const appRoutes: Routes = [
             { path: ':folderId/:noteId', loadComponent: () => import('./app/pages/note-editor/note-editor').then(m => m.NoteEditor) }
         ]
     },
-    { path: 'notfound', component: Notfound },
-    { path: 'auth', loadChildren: () => import('./app/pages/auth/auth.routes') },
+    
+    // Catch-all al final
     { path: '**', redirectTo: '/notfound' }
 ];

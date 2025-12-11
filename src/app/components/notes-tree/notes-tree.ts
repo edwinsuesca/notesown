@@ -98,7 +98,6 @@ export class NotesTreeComponent implements OnInit, OnDestroy {
         error: (error) => {
           console.error('Error al cargar carpetas y notas:', error);
           this.loading = false;
-          // TODO: Mostrar mensaje de error al usuario
         }
       });
   }
