@@ -2,6 +2,24 @@ import { Injectable } from '@angular/core';
 import { createClient, SupabaseClient, User } from '@supabase/supabase-js';
 import { environment } from 'src/environments/environment';
 
+/**
+ * Custom storage usando sessionStorage para evitar Navigator.locks
+ * sessionStorage persiste la sesión durante la pestaña pero no usa locks
+ */
+class SessionStorageAdapter {
+  async getItem(key: string): Promise<string | null> {
+    return sessionStorage.getItem(key);
+  }
+
+  async setItem(key: string, value: string): Promise<void> {
+    sessionStorage.setItem(key, value);
+  }
+
+  async removeItem(key: string): Promise<void> {
+    sessionStorage.removeItem(key);
+  }
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -14,9 +32,11 @@ export class SupabaseService {
       environment.supabase.anonKey,
       {
         auth: {
-          persistSession: false,
-          autoRefreshToken: false,
-          detectSessionInUrl: false
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true,
+          storage: new SessionStorageAdapter() as any,
+          storageKey: 'supabase.auth.token'
         }
       }
     );

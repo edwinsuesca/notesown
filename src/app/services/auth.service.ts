@@ -44,8 +44,16 @@ export class AuthService {
         this.currentUserSubject.next(null);
       }
 
-      // NOTA: authChanges deshabilitado porque causa bucle infinito
-      // cuando persistSession está deshabilitado
+      // Escuchar cambios en la autenticación
+      this.supabaseService.authChanges((event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+          this.currentUserSubject.next(session.user);
+        } else if (event === 'SIGNED_OUT') {
+          this.currentUserSubject.next(null);
+        } else if (event === 'TOKEN_REFRESHED' && session) {
+          this.currentUserSubject.next(session.user);
+        }
+      });
       
     } catch (error) {
       console.error('Error al inicializar autenticación:', error);
