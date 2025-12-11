@@ -298,7 +298,6 @@ export class NoteEditor implements OnInit, OnDestroy {
       items: type === 'checklist' ? [{ id: crypto.randomUUID(), text: '', checked: false }] : undefined,
       textType: type === 'paragraph' || type === 'highlight' || type === 'link' ? type : undefined
     };
-    alert('prueba');
     
     this.cards.update(cards => [...cards, newCard]);
     
