@@ -1,13 +1,12 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { Note } from '../../../../models/note.model';
 
 @Component({
   selector: 'app-recent-note-card',
   standalone: true,
-  imports: [CommonModule, CardModule, ButtonModule],
+  imports: [CommonModule, ButtonModule],
   templateUrl: './recent-note-card.html',
   styleUrl: './recent-note-card.css'
 })

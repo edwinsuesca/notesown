@@ -1,6 +1,5 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 
 export interface FolderCardData {
@@ -13,7 +12,7 @@ export interface FolderCardData {
 @Component({
   selector: 'app-folder-card',
   standalone: true,
-  imports: [CommonModule, CardModule, ButtonModule],
+  imports: [CommonModule, ButtonModule],
   templateUrl: './folder-card.html',
   styleUrl: './folder-card.css'
 })

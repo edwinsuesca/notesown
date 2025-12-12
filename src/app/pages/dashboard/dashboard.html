@@ -59,13 +59,13 @@
         icon="pi pi-folder-plus"
         [label]="'Nueva carpeta'"
         class="hidden md:inline-flex"
-        (onClick)="createNewFolder()"
+        (onClick)="showCreateFolderDialog()"
         severity="primary">
       </p-button>
       <p-button
         icon="pi pi-folder-plus"
         class="md:hidden"
-        (onClick)="createNewFolder()"
+        (onClick)="showCreateFolderDialog()"
         severity="primary">
       </p-button>
     </div>
@@ -102,4 +102,30 @@
       </div>
     }
   </div>
+
+  <!-- Diálogo de crear carpeta -->
+  <p-dialog 
+    header="Nueva carpeta" 
+    [modal]="true"
+    [draggable]="false"
+    [dismissableMask]="false"
+    appendTo="body"
+    [(visible)]="createFolderDialogVisible" 
+    [style]="{ width: '25rem' }">
+    <div class="flex items-center gap-4 mb-8">
+      <label for="folder-name-input" class="font-semibold w-24">Nombre</label>
+      <input 
+        pInputText 
+        id="folder-name-input" 
+        class="flex-auto" 
+        [(ngModel)]="newFolderName"
+        (keyup.enter)="createNewFolder()"
+        placeholder="Nombre de la carpeta"
+        autocomplete="off" />
+    </div>
+    <div class="flex justify-end gap-2">
+      <p-button label="Cancelar" severity="secondary" (onClick)="cancelCreateFolder()" />
+      <p-button label="Crear" (onClick)="createNewFolder()" />
+    </div>
+  </p-dialog>
 </div>

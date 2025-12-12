@@ -6,12 +6,15 @@ import { takeUntil } from 'rxjs/operators';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
+import { DialogModule } from 'primeng/dialog';
+import { InputTextModule } from 'primeng/inputtext';
+import { FormsModule } from '@angular/forms';
 import { NoteService } from '../../services/note.service';
 import { FolderService } from '../../services/folder.service';
 import { Note } from '../../models/note.model';
 import { Folder } from '../../models/folder.model';
 import { RecentNoteCard } from './components/recent-note-card/recent-note-card';
-import { FolderCard, FolderCardData } from './components/folder-card/folder-card';
+import { FolderCard } from './components/folder-card/folder-card';
 
 interface FolderWithStats extends Folder {
   noteCount: number;
@@ -26,6 +29,9 @@ interface FolderWithStats extends Folder {
     CardModule, 
     ButtonModule, 
     SkeletonModule,
+    DialogModule,
+    InputTextModule,
+    FormsModule,
     RecentNoteCard,
     FolderCard
   ],
@@ -37,6 +43,10 @@ export class Dashboard implements OnInit, OnDestroy {
   folders = signal<FolderWithStats[]>([]);
   loadingRecent = signal(true);
   loadingFolders = signal(true);
+  
+  // Diálogo de crear carpeta
+  createFolderDialogVisible = false;
+  newFolderName = '';
   
   private destroy$ = new Subject<void>();
 
@@ -155,8 +165,24 @@ export class Dashboard implements OnInit, OnDestroy {
     return `hace ${years} ${years === 1 ? 'año' : 'años'}`;
   }
 
+  /**
+   * Muestra el diálogo para crear una nueva carpeta
+   */
+  showCreateFolderDialog(): void {
+    this.newFolderName = '';
+    this.createFolderDialogVisible = true;
+  }
+
+  /**
+   * Crea una nueva carpeta con el nombre ingresado
+   */
   createNewFolder(): void {
-    this.folderService.createFolder({ name: 'Nueva Carpeta' })
+    if (!this.newFolderName.trim()) {
+      this.createFolderDialogVisible = false;
+      return;
+    }
+
+    this.folderService.createFolder({ name: this.newFolderName.trim() })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (newFolder) => {
@@ -165,10 +191,22 @@ export class Dashboard implements OnInit, OnDestroy {
           
           // Navegar a la nueva carpeta
           this.router.navigate([newFolder.id]);
+          
+          // Cerrar el diálogo
+          this.createFolderDialogVisible = false;
         },
         error: (error) => {
           console.error('Error al crear carpeta:', error);
+          this.createFolderDialogVisible = false;
         }
       });
+  }
+
+  /**
+   * Cancela la creación de carpeta
+   */
+  cancelCreateFolder(): void {
+    this.createFolderDialogVisible = false;
+    this.newFolderName = '';
   }
 }
