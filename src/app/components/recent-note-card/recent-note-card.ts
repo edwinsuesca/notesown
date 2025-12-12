@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
-import { Note } from '../../../../models/note.model';
+import { Note } from '../../models/note.model';
 
 @Component({
   selector: 'app-recent-note-card',

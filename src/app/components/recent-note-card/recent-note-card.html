@@ -20,7 +20,7 @@
   <div class="text-surface-600 dark:text-surface-400 text-xs ml-8">
     <p class="!mb-0.5 whitespace-nowrap">
       <i class="pi pi-clock mr-1 !text-sm"></i>
-      {{ formatRelativeTime(note.read_at) }}
+      {{ formatRelativeTime(note.read_at || note.created_at) }}
     </p>
   </div>
 </div>

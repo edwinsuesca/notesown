@@ -13,8 +13,8 @@ import { NoteService } from '../../services/note.service';
 import { FolderService } from '../../services/folder.service';
 import { Note } from '../../models/note.model';
 import { Folder } from '../../models/folder.model';
-import { RecentNoteCard } from './components/recent-note-card/recent-note-card';
-import { FolderCard } from './components/folder-card/folder-card';
+import { RecentNoteCard } from '../../components/recent-note-card/recent-note-card';
+import { FolderCard } from '../../components/folder-card/folder-card';
 
 interface FolderWithStats extends Folder {
   noteCount: number;

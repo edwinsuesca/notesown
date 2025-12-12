@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
 import { BreadcrumbModule } from 'primeng/breadcrumb';
@@ -14,11 +13,12 @@ import { FolderService } from '../../services/folder.service';
 import { EditorStateService } from '../../services/editor-state.service';
 import { Note } from '../../models/note.model';
 import { Folder } from '../../models/folder.model';
+import { RecentNoteCard } from '../../components/recent-note-card/recent-note-card';
 
 @Component({
   selector: 'app-folder-view',
   standalone: true,
-  imports: [CommonModule, CardModule, ButtonModule, SkeletonModule, BreadcrumbModule, ConfirmDialogModule],
+  imports: [CommonModule, ButtonModule, SkeletonModule, BreadcrumbModule, ConfirmDialogModule, RecentNoteCard],
   providers: [ConfirmationService],
   template: `
     <div class="min-h-screen p-4">
@@ -83,38 +83,24 @@ import { Folder } from '../../models/folder.model';
 
       <!-- Loading State -->
       @if (loading() && !error()) {
-        <div class="flex flex-wrap gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
           @for (i of [1,2,3,4,5,6]; track i) {
-            <p-card styleClass="w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.67rem)]">
+            <div class="card !p-4">
               <p-skeleton width="100%" height="2rem" styleClass="mb-2"></p-skeleton>
-              <p-skeleton width="100%" height="4rem"></p-skeleton>
-            </p-card>
+              <p-skeleton width="100%" height="1rem"></p-skeleton>
+            </div>
           }
         </div>
       }
 
       <!-- Notes Grid -->
       @if (!loading() && notes().length > 0) {
-        <div class="flex flex-wrap gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
           @for (note of notes(); track note.id) {
-            <p-card 
-              [header]="note.name"
-              styleClass="w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.67rem)] cursor-pointer hover:shadow-lg transition-shadow"
-              (click)="openNote(note.id)">
-              <div class="text-surface-600 dark:text-surface-400 text-sm">
-                <p>Creada: {{ formatDate(note.created_at) }}</p>
-              </div>
-              <ng-template pTemplate="footer">
-                <div class="flex gap-2">
-                  <p-button 
-                    icon="pi pi-eye" 
-                    label="Abrir"
-                    [text]="true"
-                    (onClick)="openNote(note.id); $event.stopPropagation()">
-                  </p-button>
-                </div>
-              </ng-template>
-            </p-card>
+            <app-recent-note-card 
+              [note]="note"
+              (noteClick)="openNote(note.id)">
+            </app-recent-note-card>
           }
         </div>
       }
@@ -267,17 +253,6 @@ export class FolderView implements OnInit, OnDestroy {
       error: (error) => {
         console.error('Error al crear nota:', error);
       }
-    });
-  }
-
-  formatDate(dateString?: string): string {
-    if (!dateString) return 'Sin fecha';
-
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
     });
   }
 
