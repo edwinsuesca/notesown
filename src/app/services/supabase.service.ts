@@ -3,20 +3,20 @@ import { createClient, SupabaseClient, User } from '@supabase/supabase-js';
 import { environment } from 'src/environments/environment';
 
 /**
- * Custom storage usando sessionStorage para evitar Navigator.locks
- * sessionStorage persiste la sesión durante la pestaña pero no usa locks
+ * Custom storage usando localStorage para persistir la sesión
+ * localStorage mantiene la sesión incluso después de cerrar el navegador
  */
-class SessionStorageAdapter {
+class LocalStorageAdapter {
   async getItem(key: string): Promise<string | null> {
-    return sessionStorage.getItem(key);
+    return localStorage.getItem(key);
   }
 
   async setItem(key: string, value: string): Promise<void> {
-    sessionStorage.setItem(key, value);
+    localStorage.setItem(key, value);
   }
 
   async removeItem(key: string): Promise<void> {
-    sessionStorage.removeItem(key);
+    localStorage.removeItem(key);
   }
 }
 
@@ -35,7 +35,7 @@ export class SupabaseService {
           persistSession: true,
           autoRefreshToken: true,
           detectSessionInUrl: true,
-          storage: new SessionStorageAdapter() as any,
+          storage: new LocalStorageAdapter() as any,
           storageKey: 'supabase.auth.token'
         }
       }
