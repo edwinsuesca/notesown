@@ -38,6 +38,31 @@ export class ItemNoteService {
   }
 
   /**
+   * Obtiene los últimos 4 items actualizados recientemente
+   * @returns Observable con la lista de los 4 items más recientes
+   */
+  getRecentItems(limit: number = 4): Observable<ItemNote[]> {
+    return from(
+      this.supabaseService.getClient()
+        .from('item_note')
+        .select('*')
+        .order('updated_at', { ascending: false })
+        .limit(limit)
+    ).pipe(
+      map(response => {
+        if (response.error) {
+          throw response.error;
+        }
+        return response.data as ItemNote[];
+      }),
+      catchError(error => {
+        console.error('Error al consultar items recientes:', error);
+        throw error;
+      })
+    );
+  }
+
+  /**
    * Crea un nuevo item de nota
    * @param itemData Datos del item a crear
    * @returns Observable con el item creado

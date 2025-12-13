@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { MenuItem } from 'primeng/api';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { StyleClassModule } from 'primeng/styleclass';
 import { AvatarModule } from 'primeng/avatar';
@@ -22,7 +22,8 @@ export class AppTopbar implements OnInit {
 
   constructor(
     public layoutService: LayoutService,
-    private authService: AuthService
+    private authService: AuthService,
+    private router: Router
   ) { }
 
   ngOnInit() {
@@ -75,6 +76,15 @@ export class AppTopbar implements OnInit {
       error: (error) => {
         console.error('Error al cerrar sesión:', error);
       }
+    });
+  }
+
+  /**
+   * Navega al dashboard y activa el modo de búsqueda
+   */
+  navigateToSearch(): void {
+    this.router.navigate(['/dashboard'], { 
+      queryParams: { search: 'true' }
     });
   }
 }

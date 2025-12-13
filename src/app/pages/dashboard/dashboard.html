@@ -9,51 +9,200 @@
     </p>
   </div>
 
-  <!-- Notas Recientes -->
+  <!-- Barra de búsqueda -->
   <div class="mb-6 md:mb-8">
-    <div class="flex items-center justify-between mb-3 md:mb-4">
-      <h2 class="text-xl md:text-2xl font-semibold text-surface-900 dark:text-surface-100">
-        Notas Recientes
-      </h2>
+    <div class="relative">
+      <input 
+        #searchInput
+        type="text"
+        pInputText
+        [(ngModel)]="searchQuery"
+        (ngModelChange)="onSearchChange($event)"
+        placeholder="Buscar en carpetas, notas y contenidos..."
+        class="w-full pl-10 pr-10"
+        pSize="large"
+        autocomplete="off" />
+      
+      @if (isSearching()) {
+        <i class="pi pi-spin pi-spinner absolute right-3 top-1/2 -translate-y-1/2 text-primary-500"></i>
+      } @else if (searchQuery()) {
+        <button
+          class="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 hover:text-surface-600"
+          (click)="clearSearch()">
+          <i class="pi pi-times"></i>
+        </button>
+      }
     </div>
+  </div>
 
-    @if (loadingRecent()) {
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-        @for (i of [1,2,3,4]; track i) {
-          <p-card>
-            <p-skeleton width="100%" height="2rem" styleClass="mb-2"></p-skeleton>
-            <p-skeleton width="100%" height="1rem"></p-skeleton>
-          </p-card>
-        }
+  <!-- Contenidos Recientes (solo si no hay búsqueda activa) -->
+  @if (!searchQuery()) {
+    <div class="mb-6 md:mb-8">
+      <div class="flex items-center justify-between mb-3 md:mb-4">
+        <h2 class="text-xl md:text-2xl font-semibold text-surface-900 dark:text-surface-100">
+          Contenidos Recientes
+        </h2>
       </div>
-    }
 
-    @if (!loadingRecent() && recentNotes().length > 0) {
+      @if (loadingRecentItems()) {
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+          @for (i of [1,2,3,4]; track i) {
+            <p-card>
+              <p-skeleton width="100%" height="2rem" styleClass="mb-2"></p-skeleton>
+              <p-skeleton width="100%" height="4rem"></p-skeleton>
+            </p-card>
+          }
+        </div>
+      }
+
+      @if (!loadingRecentItems() && recentItems().length > 0) {
+        <app-masonry-grid>
+          @for (item of recentItems(); track item.id) {
+            @if (item.type === 'paragraph' || item.type === 'link' || item.type === 'highlight') {
+              <app-readonly-text-card
+                [title]="item.title"
+                [content]="item.content || ''"
+                [textType]="$any(item.text_type || 'paragraph')"
+                (cardClick)="openNoteFromItem(item)">
+              </app-readonly-text-card>
+            } @else if (item.type === 'checklist') {
+              <app-readonly-checklist-card
+                [title]="item.title"
+                [items]="item.items || []"
+                (cardClick)="openNoteFromItem(item)">
+              </app-readonly-checklist-card>
+            }
+          }
+        </app-masonry-grid>
+      }
+
+      @if (!loadingRecentItems() && recentItems().length === 0) {
+        <div class="text-center py-8 md:py-12 bg-surface-50 dark:bg-surface-800 rounded-lg">
+          <i class="pi pi-file-edit text-3xl md:text-4xl text-surface-400 mb-2 md:mb-3"></i>
+          <p class="text-sm md:text-base text-surface-600 dark:text-surface-400">
+            No hay contenidos recientes
+          </p>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Notas Recientes (solo si no hay búsqueda activa) -->
+  @if (!searchQuery()) {
+    <div class="mb-6 md:mb-8">
+      <div class="flex items-center justify-between mb-3 md:mb-4">
+        <h2 class="text-xl md:text-2xl font-semibold text-surface-900 dark:text-surface-100">
+          Notas Recientes
+        </h2>
+      </div>
+
+      @if (loadingRecent()) {
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+          @for (i of [1,2,3,4]; track i) {
+            <p-card>
+              <p-skeleton width="100%" height="2rem" styleClass="mb-2"></p-skeleton>
+              <p-skeleton width="100%" height="1rem"></p-skeleton>
+            </p-card>
+          }
+        </div>
+      }
+
+      @if (!loadingRecent() && recentNotes().length > 0) {
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+          @for (note of recentNotes(); track note.id) {
+            <app-recent-note-card 
+              [note]="note"
+              (noteClick)="openNote($event)">
+            </app-recent-note-card>
+          }
+        </div>
+      }
+
+      @if (!loadingRecent() && recentNotes().length === 0) {
+        <div class="text-center py-8 md:py-12 bg-surface-50 dark:bg-surface-800 rounded-lg">
+          <i class="pi pi-file text-3xl md:text-4xl text-surface-400 mb-2 md:mb-3"></i>
+          <p class="text-sm md:text-base text-surface-600 dark:text-surface-400">
+            No hay notas recientes
+          </p>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Resultados de búsqueda: Items/Contenidos encontrados -->
+  @if (searchQuery() && filteredItems().length > 0) {
+    <div class="mb-6 md:mb-8">
+      <div class="flex items-center justify-between mb-3 md:mb-4">
+        <h2 class="text-xl md:text-2xl font-semibold text-surface-900 dark:text-surface-100">
+          Contenidos encontrados ({{ filteredItems().length }})
+        </h2>
+      </div>
+
+      <app-masonry-grid>
+        @for (item of filteredItems(); track item.id) {
+          @if (item.type === 'paragraph' || item.type === 'link' || item.type === 'highlight') {
+            <app-readonly-text-card
+              [title]="item.title"
+              [content]="item.content || ''"
+              [textType]="$any(item.text_type || 'paragraph')"
+              (cardClick)="openNoteFromSearchItem(item)">
+            </app-readonly-text-card>
+          } @else if (item.type === 'checklist') {
+            <app-readonly-checklist-card
+              [title]="item.title"
+              [items]="item.items || []"
+              (cardClick)="openNoteFromSearchItem(item)">
+            </app-readonly-checklist-card>
+          }
+        }
+      </app-masonry-grid>
+    </div>
+  }
+
+  <!-- Resultados de búsqueda: Notas encontradas -->
+  @if (searchQuery() && filteredNotes().length > 0) {
+    <div class="mb-6 md:mb-8">
+      <div class="flex items-center justify-between mb-3 md:mb-4">
+        <h2 class="text-xl md:text-2xl font-semibold text-surface-900 dark:text-surface-100">
+          Notas encontradas ({{ filteredNotes().length }})
+        </h2>
+      </div>
+
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-        @for (note of recentNotes(); track note.id) {
+        @for (note of filteredNotes(); track note.id) {
           <app-recent-note-card 
             [note]="note"
-            (noteClick)="openNote($event)">
+            (noteClick)="openNoteFromSearch($event)">
           </app-recent-note-card>
         }
       </div>
-    }
+    </div>
+  }
 
-    @if (!loadingRecent() && recentNotes().length === 0) {
-      <div class="text-center py-8 md:py-12 bg-surface-50 dark:bg-surface-800 rounded-lg">
-        <i class="pi pi-file text-3xl md:text-4xl text-surface-400 mb-2 md:mb-3"></i>
+  <!-- Mensaje cuando no hay resultados en la búsqueda -->
+  @if (searchQuery() && !isSearching() && filteredItems().length === 0 && filteredNotes().length === 0 && filteredFolders().length === 0) {
+    <div class="mb-6 md:mb-8">
+      <div class="text-center py-12 md:py-16 bg-surface-50 dark:bg-surface-800 rounded-lg">
+        <i class="pi pi-search text-4xl md:text-5xl text-surface-400 mb-3 md:mb-4"></i>
+        <h3 class="text-lg md:text-xl font-semibold text-surface-700 dark:text-surface-300 mb-2">
+          No se encontraron resultados
+        </h3>
         <p class="text-sm md:text-base text-surface-600 dark:text-surface-400">
-          No hay notas recientes
+          Intenta con otros términos de búsqueda
         </p>
       </div>
-    }
-  </div>
+    </div>
+  }
 
   <!-- Carpetas -->
   <div>
     <div class="flex items-center justify-between gap-2 mb-3 md:mb-4">
       <h2 class="text-xl md:text-2xl font-semibold text-surface-900 dark:text-surface-100">
-        Todas las Carpetas
+        @if (searchQuery()) {
+          Carpetas encontradas ({{ filteredFolders().length }})
+        } @else {
+          Todas las Carpetas
+        }
       </h2>
       <p-button
         icon="pi pi-folder-plus"
@@ -82,9 +231,9 @@
       </div>
     }
 
-    @if (!loadingFolders() && folders().length > 0) {
+    @if (!loadingFolders() && filteredFolders().length > 0) {
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-        @for (folder of folders(); track folder.id) {
+        @for (folder of filteredFolders(); track folder.id) {
           <app-folder-card 
             [folder]="folder"
             (folderClick)="openFolder($event)">
@@ -93,11 +242,20 @@
       </div>
     }
 
-    @if (!loadingFolders() && folders().length === 0) {
+    @if (!loadingFolders() && filteredFolders().length === 0 && !searchQuery()) {
       <div class="text-center py-8 md:py-12 bg-surface-50 dark:bg-surface-800 rounded-lg">
         <i class="pi pi-folder-open text-3xl md:text-4xl text-surface-400 mb-2 md:mb-3"></i>
         <p class="text-sm md:text-base text-surface-600 dark:text-surface-400">
           No hay carpetas creadas
+        </p>
+      </div>
+    }
+
+    @if (!loadingFolders() && filteredFolders().length === 0 && searchQuery()) {
+      <div class="text-center py-8 md:py-12 bg-surface-50 dark:bg-surface-800 rounded-lg">
+        <i class="pi pi-search text-3xl md:text-4xl text-surface-400 mb-2 md:mb-3"></i>
+        <p class="text-sm md:text-base text-surface-600 dark:text-surface-400">
+          No se encontraron resultados para "{{ searchQuery() }}"
         </p>
       </div>
     }
