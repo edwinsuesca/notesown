@@ -1,14 +1,4 @@
 <div class="min-h-screen">
-  <!-- Header -->
-  <div class="mb-4 md:mb-8">
-    <h1 class="text-xl md:text-2xl font-bold !text-primary-500 !m-0">
-      Dashboard
-    </h1>
-    <p class="text-sm md:text-base text-surface-600 dark:text-surface-400">
-      Bienvenido a tu espacio de notas
-    </p>
-  </div>
-
   <!-- Barra de búsqueda -->
   <div class="mb-6 md:mb-8">
     <div class="relative">
@@ -19,8 +9,7 @@
         [(ngModel)]="searchQuery"
         (ngModelChange)="onSearchChange($event)"
         placeholder="Buscar en carpetas, notas y contenidos..."
-        class="w-full pl-10 pr-10"
-        pSize="large"
+        class="w-full pl-10 pr-10 !text-2xl"
         autocomplete="off" />
       
       @if (isSearching()) {
