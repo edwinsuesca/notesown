@@ -27,7 +27,7 @@ interface FolderWithStats extends Folder {
   lastUpdate: string;
 }
 
-interface RecentItem extends ItemNote {
+export interface RecentItem extends ItemNote {
   note: Note;
 }
 

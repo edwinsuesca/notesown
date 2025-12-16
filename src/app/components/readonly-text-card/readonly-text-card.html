@@ -1,0 +1,24 @@
+<div [class]="cardClass()" (click)="cardClick.emit()">
+  <h3 class="text-lg font-semibold !m-0 !mb-2 opacity-50">
+    {{ item().title }}
+  </h3>
+  
+  @if (item().text_type === 'link' && item().content) {
+    <a 
+      [href]="item().content" 
+      target="_blank" 
+      rel="noopener noreferrer"
+      (click)="$event.stopPropagation()"
+      class="text-blue-500 hover:text-blue-600 underline cursor-pointer break-all">
+      {{ item().content }}
+    </a>
+  } @else {
+    <div [class]="contentClass()">
+      {{ item().content || 'Sin contenido' }}
+    </div>
+  }
+
+  <span class="block mt-4 text-sm font-bold bg-[#00000017] dark:bg-[#ffffff17] px-2 py-1 rounded shadow-sm">
+    Actualizado: {{item().updated_at | date:'dd/MMM/yyyy hh:mm:ss a'}}
+  </span>
+</div>

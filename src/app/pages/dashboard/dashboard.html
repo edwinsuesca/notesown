@@ -60,14 +60,13 @@
           @for (item of recentItems(); track item.id) {
             @if (item.type === 'paragraph' || item.type === 'link' || item.type === 'highlight') {
               <app-readonly-text-card
-                [title]="item.title"
-                [content]="item.content || ''"
-                [textType]="$any(item.text_type || 'paragraph')"
+                [item]="item"
                 (cardClick)="openNoteFromItem(item)">
               </app-readonly-text-card>
             } @else if (item.type === 'checklist') {
               <app-readonly-checklist-card
                 [title]="item.title"
+                [updatedAt]="item.updated_at"
                 [items]="item.items || []"
                 (cardClick)="openNoteFromItem(item)">
               </app-readonly-checklist-card>
@@ -142,9 +141,7 @@
         @for (item of filteredItems(); track item.id) {
           @if (item.type === 'paragraph' || item.type === 'link' || item.type === 'highlight') {
             <app-readonly-text-card
-              [title]="item.title"
-              [content]="item.content || ''"
-              [textType]="$any(item.text_type || 'paragraph')"
+              [item]="item"
               (cardClick)="openNoteFromSearchItem(item)">
             </app-readonly-text-card>
           } @else if (item.type === 'checklist') {
